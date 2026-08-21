@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡</title> <!-- Título minimalista e discreto -->
+    <style>
+        /* Tela preta absoluta e limpa, sem elementos visíveis */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #020617;
+            overflow: hidden;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+</head>
+<body> 
+    <script>
+        const chaveXorMestre = "PrincesaDiamante";
+        
+        // Tags de demarcação binária (ASCII) correspondentes à HELENA v33.0
+        const tagInicio = new Uint8Array([74, 68, 80, 45, 83, 84, 65, 82, 84]); // "JDP-START"
+        const tagFim = new Uint8Array([74, 68, 80, 45, 69, 78, 68]);       // "JDP-END"
+
+        // CIFRA XOR BINÁRIA DE ALTA PERFORMANCE
+        function xorEngine(bytes, key) {
+            const keyBytes = new TextEncoder().encode(key);
+            const output = new Uint8Array(bytes.length);
+            for (let i = 0; i < bytes.length; i++) {
+                output[i] = bytes[i] ^ keyBytes[i % keyBytes.length];
+            }
+            return output;
+        }
+
+        // BUSCA BINÁRIA REVERSA DE ALTA VELOCIDADE (PREVINE TRAVAMENTOS)
+        function localizarSubarray(arr, sub, deTrasParaFrente = true) {
+            const limit = arr.length - sub.length;
+            if (deTrasParaFrente) {
+                for (let i = limit; i >= 0; i--) {
+                    let match = true;
+                    for (let j = 0; j < sub.length; j++) {
+                        if (arr[i + j] !== sub[j]) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match) return i;
+                }
+            } else {
+                for (let i = 0; i <= limit; i++) {
+                    let match = true;
+                    for (let j = 0; j < sub.length; j++) {
+                        if (arr[i + j] !== sub[j]) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match) return i;
+                }
+            }
+            return -1;
+        }
+
+        // GATILHO DE TOQUE IMEDIATO: Abre o seletor de arquivos do celular
+        document.body.addEventListener('click', () => {
+            document.getElementById('stealth-input').click();
+        });
+
+        // PROCESSAMENTO DO ARQUIVO SELECIONADO PELO CRIADOR
+        function processarArquivoManual(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                processarBytesDaFoto(new Uint8Array(evt.target.result));
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // EXTRATOR E EXECUTOR BINÁRIO EM RAM (FOTO -> FILHOTE)
+        function processarBytesDaFoto(bytesCarrier) {
+            try {
+                // Busca as marcações de trás para frente na cauda binária do arquivo portador
+                const indexInicio = localizarSubarray(bytesCarrier, tagInicio, true);
+                const indexFim = localizarSubarray(bytesCarrier, tagFim, true);
+
+                if (indexInicio !== -1 && indexFim !== -1 && indexInicio < indexFim) {
+                    // Isola o payload criptografado
+                    const payloadCripto = bytesCarrier.subarray(indexInicio + tagInicio.length, indexFim);
+
+                    // Descriptografa usando a chave mestre "PrincesaDiamante"
+                    const payloadDescriptografado = xorEngine(payloadCripto, chaveXorMestre);
+
+                    // Ler tamanho dos metadados (primeiros 4 bytes - Uint32 Big Endian)
+                    const lenMetadata = (payloadDescriptografado[0] << 24) | 
+                                         (payloadDescriptografado[1] << 16) | 
+                                         (payloadDescriptografado[2] << 8) | 
+                                         payloadDescriptografado[3];
+
+                    // Recorta cirurgicamente os bytes do arquivo original (Filhote HTML) pulando o cabeçalho
+                    const bytesHtmlOriginal = payloadDescriptografado.subarray(4 + lenMetadata);
+
+                    // Converte os bytes originais de volta para string de texto HTML
+                    const htmlFinal = new TextDecoder().decode(bytesHtmlOriginal);
+
+                    // Sobrescreve o DOM instantaneamente com a interface decodificada do Filhote
+                    document.open();
+                    document.write(htmlFinal);
+                    document.close();
+                }
+            } catch (e) {
+                // Tratamento silencioso de segurança operacional JDP
+                console.error(e);
+            }
+        }
+    </script>
+</body>
+</html>
+            } catch (e) {
+                // Tratamento silencioso de segurança operacional JDP
+                console.error(e);
+            }
+        }
+    </script>
+</body>
+</html>
