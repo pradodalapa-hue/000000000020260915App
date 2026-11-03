@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="no-zoom">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <title>HELENA - Painel de Controle de Elite</title>
+    
+    <!-- ================================================================= -->
+    <!--  MÓDULO VIGIA CONTEXTUAL & AUTO-LOGIN UNIVERSAL JDP (0% ERROS)    -->
+    <!-- ================================================================= -->
+    <script>
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const masterBypass = urlParams.get('admin') || urlParams.get('master') || urlParams.get('login');
+            const tunnelParam = urlParams.get('tunnel');
+            const CRYPTO_SALT = "PrincesaDiamante_JDP_Sec_2026";
+
+            // Motor de Impressão de Hardware Local (Sintonia de Consenso)
+            function generateLocalFingerprint() {
+                try {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    ctx.textBaseline = "top";
+                    ctx.font = "12px 'Arial'";
+                    ctx.fillText('HELENA_P2P_SHIELD', 2, 12);
+                    const canvasData = canvas.toDataURL();
+                    let hash = 0;
+                    const inputs = canvasData + navigator.userAgent + screen.width;
+                    for (let i = 0; i < inputs.length; i++) {
+                        hash = (hash << 5) - hash + inputs.charCodeAt(i);
+                        hash |= 0;
+                    }
+                    return Math.abs(hash).toString(16);
+                } catch (e) {
+                    return "fingerprint_jdp_tunnel";
+                }
+            }
+
+            function generateSaltedSignature(phone, fingerprint) {
+                const input = phone + fingerprint + CRYPTO_SALT;
+                let hash = 0;
+                for (let i = 0; i < input.length; i++) {
+                    hash = ((hash << 5) - hash) + input.charCodeAt(i);
+                    hash |= 0;
+                }
+                return Math.abs(hash).toString(36);
+            }
+
+            // Auto-login de Segurança do Criador (Sr. José)
+            if (masterBypass === 'jdp' || masterBypass === '1234' || masterBypass === 'Princesa Diamante') {
+                localStorage.setItem('jdp_admin_bypass', 'true');
+                sessionStorage.setItem('jdp_cliente_nome', 'SR. JOSÉ DIVINO (CRIADOR)');
+                sessionStorage.setItem('jdp_cliente_whatsapp', '5592984846058');
+                sessionStorage.setItem('jdp_cliente_endereco', 'CENTRAL INDUSTRIAL HELENA');
+                localStorage.removeItem('jdp_blocked_forever');
+                window.history.replaceState({}, document.title, window.location.pathname);
+                return;
+            }
+
+            // VALIDAÇÃO DE CONSENSO DO CRIPTO-TÚNEL JDP
+            if (tunnelParam) {
+                try {
+                    const outerDecoded = JSON.parse(atob(tunnelParam));
+                    const payload = JSON.parse(outerDecoded.payload);
+                    const signature = outerDecoded.signature;
+
+                    // Re-calcula a assinatura com os dados recebidos
+                    const expectedSignature = generateSaltedSignature(payload.phone, payload.fingerprint);
+
+                    if (signature === expectedSignature) {
+                        // Consenso alcançado! Session carregada com sucesso
+                        sessionStorage.setItem('jdp_cliente_nome', payload.name);
+                        sessionStorage.setItem('jdp_cliente_whatsapp', payload.phone);
+                        sessionStorage.setItem('jdp_cliente_endereco', payload.address);
+                        document.documentElement.classList.add('session-active');
+                    } else {
+                        // Assinatura inválida (Fraude de URL detectada)
+                        document.documentElement.classList.remove('session-active');
+                        sessionStorage.clear();
+                        window.onload = () => {
+                            document.getElementById('block-screen').classList.remove('hidden');
+                            document.getElementById('block-referrer').innerText = "Assinatura Corrompida (Tampering)";
+                        };
+                    }
+                } catch (e) {
+                    // Erro de decodificação do bloco
+                    document.documentElement.classList.remove('session-active');
+                    window.onload = () => {
+                        document.getElementById('block-screen').classList.remove('hidden');
+                        document.getElementById('block-referrer').innerText = "Erro ao descriptografar bloco";
+                    };
+                }
+            } else {
+                // Sem túnel ativo na URL, verifica se há sessão ativa temporária
+                const whatsSalvo = sessionStorage.getItem('jdp_cliente_whatsapp');
+                if (whatsSalvo) {
+                    document.documentElement.classList.add('session-active');
+                } else {
+                    document.documentElement.classList.remove('session-active');
+                }
+            }
+        })();
+    </script>
+    <!-- ================================================================= -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- COMPATIBILIDADE DOS MOTORES -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { mono: ['JetBrains Mono', 'monospace'], sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        slate: { 950: '#1a1a00' },
+                        cyan: { 500: '#997a00' },
+                        yellow: { 300: '#ffd700' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        html, body {
+            touch-action: none !important;
+            -webkit-text-size-adjust: 100%;
+            -webkit-user-select: none;
+            user-select: none;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden !important;
+            background-color: #ffd700 !important;
+        }
+        body {
+            font-family: 'Inter', 'JetBrains Mono', monospace;
+            background: radial-gradient(circle at top center, #ffd700 0%, #ffd700 50%, #cca100 100%) !important;
+            color: #1a1a00;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        #client-panel {
+            width: 100% !important;
+            max-width: 480px;
+            height: 100%;
+            margin: 0 auto;
+            padding: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 0.4rem;
+            overflow: hidden !important;
+        }
+        .crisp-bg {
+            image-rendering: -webkit-optimize-contrast !important;
+            image-rendering: crisp-edges !important;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        .glow-yellow { box-shadow: 0 0 20px rgba(204, 161, 0, 0.4); border: 2px solid #cca100; background: #fffae6; }
+        .glow-cyan { box-shadow: 0 0 20px rgba(204, 161, 0, 0.4); border: 2px solid #cca100; background: #fffae6; }
+        .glow-red { box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+
+        /* Carrossel de Banners Compactado */
+        .slider-container {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            height: 100%;
+            border-radius: 12px;
+            border: 2px solid #cca100;
+            background: #000;
+        }
+        .slider-track {
+            display: flex;
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            height: 100%;
+        }
+        .slide {
+            min-width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        .slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        @keyframes scan {
+            0% { top: 0%; }
+            50% { top: 100%; }
+            100% { top: 0%; }
+        }
+        .scanner-line {
+            animation: scan 2s linear infinite;
+            background-color: #1a1a00;
+        }
+        @keyframes holoPulse {
+            0%, 100% { opacity: 0.03; transform: translateY(0) scale(1); }
+            50% { opacity: 0.08; transform: translateY(-4px) scale(1.01); }
+        }
+        .engineer-holo {
+            animation: holoPulse 6s ease-in-out infinite;
+        }
+
+        /* Ocultar barra de rolagem horizontal mantendo funcionalidade */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* ESTEIRA DE TRANSMISSÃO DE GANHOS INFINITA (MARQUEE) */
+        .marquee-jdp-container {
+            width: 100%;
+            background-color: #fffae6;
+            border: 2px solid #cca100;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(204, 161, 0, 0.3);
+            pointer-events: none;
+            margin-bottom: 0.35rem;
+            border-radius: 12px;
+        }
+        .marquee-jdp-content {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            white-space: nowrap;
+            animation: marquee-transmission 22s linear infinite;
+        }
+        .marquee-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Inter', 'JetBrains Mono', monospace;
+            font-size: 9px;
+            font-weight: 900;
+            color: #1a1a00;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .marquee-icon {
+            width: 14px;
+            height: 14px;
+            object-fit: contain;
+            pointer-events: none;
+            border-radius: 50%;
+        }
+        @keyframes marquee-transmission {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* ESTILO DO TICKER VERTICAL DE LÍDERES */
+        #leaderboard-ticker-content {
+            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* Animação de Vibração Suave para Caixas Individuais */
+        @keyframes cardVibrate {
+            0% { transform: translate(0, 0) scale(1.02); }
+            20% { transform: translate(-1px, 1px) rotate(-0.5deg) scale(1.02); }
+            40% { transform: translate(1px, -1px) rotate(0.5deg) scale(1.02); }
+            60% { transform: translate(-1px, -1px) rotate(-0.5deg) scale(1.02); }
+            80% { transform: translate(1px, 1px) rotate(0.5deg) scale(1.02); }
+            100% { transform: translate(0, 0) rotate(0deg) scale(1.02); }
+        }
+        .vibrate-card-active {
+            animation: cardVibrate 0.1s infinite !important;
+            border-color: #1a1a00 !important;
+            box-shadow: 0 0 15px rgba(26, 26, 0, 0.6) !important;
+            z-index: 30 !important;
+        }
+
+        /* Efeito de Vibração da Tela Inteira */
+        @keyframes screenVibrate {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            10% { transform: translate(-2px, -2px) rotate(-0.5deg); }
+            20% { transform: translate(2px, 2px) rotate(0.5deg); }
+            30% { transform: translate(-2px, 2px) rotate(-0.5deg); }
+            40% { transform: translate(2px, -2px) rotate(0.5deg); }
+            50% { transform: translate(-2px, -2px) rotate(-0.5deg); }
+            60% { transform: translate(2px, 2px) rotate(0.5deg); }
+            70% { transform: translate(-2px, 2px) rotate(-0.5deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+        .vibrate-active {
+            animation: screenVibrate 0.15s infinite !important;
+        }
+
+        /* Controle de Exibição das Sessões */
+        .session-active #login-screen {
+            display: none !important;
+        }
+        .session-active #client-panel {
+            display: flex !important;
+        }
+
+        /* ================================================================= -->
+        <!-- MOTOR DE VÍDEO DE FUNDO INFINITO JDP OTIMIZADO (GPU ISOLADA)      -->
+        <!-- ================================================================= */
+        #video-background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -10;
+            overflow: hidden;
+            background-color: #ffd700;
+            transform: translateZ(0);
+            will-change: transform;
+            contain: strict;
+        }
+        #display-area {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: opacity 0.8s ease-in-out;
+            will-change: opacity;
+            transform: translateZ(0);
+        }
+        .midia-content {
+            min-width: 100%;
+            min-height: 100%;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) translateZ(0);
+            object-fit: cover;
+            opacity: 0.15;
+            will-change: transform;
+            contain: strict;
+        }
+        #video-background-overlay {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top center, rgba(255, 235, 102, 0.85) 0%, rgba(255, 215, 0, 0.92) 50%, rgba(204, 161, 0, 0.95) 100%);
+            z-index: 1;
+        }
+        .backdrop-blur-md {
+            -webkit-backdrop-filter: blur(6px) saturate(150%) !important;
+            backdrop-filter: blur(6px) saturate(150%) !important;
+            transform: translateZ(0);
+        }
+
+        #btn-Chat {
+            position: fixed;
+            right: 16px;
+            bottom: 210px;
+            z-index: 40;
+            animation: pulsar-invisivel 4s infinite ease-in-out;
+        }
+        #btn-Jogo {
+            bottom: 145px;
+            border-color: #1a1a00;
+            box-shadow: 0 0 15px rgba(26, 26, 0, 0.4);
+            background: #ffd700;
+        }
+        #btn-logo {
+            bottom: 80px;
+        }
+
+        @keyframes pulsar-invisivel {
+            0%, 100% { opacity: 0; transform: scale(0.8); }
+            20%, 80% { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="w-screen h-screen flex flex-col justify-between relative overflow-hidden">
+
+    <!-- CAMADA INVISÍVEL DE CAPTURA PARA GATILHO DA CERIMÔNIA -->
+    <div id="celebration-trigger-overlay" class="fixed inset-0 bg-yellow-500/95 z-[99998] hidden flex flex-col items-center justify-center text-center p-6 backdrop-blur-md">
+        <div class="bg-[#fffae6] border-2 border-[#1a1a00] p-6 rounded-2xl glow-yellow max-w-xs animate-bounce cursor-pointer shadow-2xl">
+            <i class="fas fa-trophy text-5xl text-[#1a1a00] mb-3 animate-pulse"></i>
+            <h3 class="text-[#1a1a00] font-black text-xs uppercase tracking-wider">ESTEIRA FINALIZADA!</h3>
+            <p class="text-[10px] text-[#4a3800] mt-2 font-bold">Toque em qualquer lugar da tela para iniciar sua certificação de premiação.</p>
+        </div>
+    </div>
+
+    <!-- OVERLAY DE DESTRUIÇÃO/COMPLETO -->
+    <div id="destruction-overlay" class="fixed inset-0 bg-yellow-400 z-[99999] hidden flex flex-col items-center justify-center overflow-hidden">
+        <div id="video-container" class="absolute inset-0 flex items-center justify-center bg-black z-20">
+            <video id="celebration-video" class="w-full h-full object-cover" playsinline muted></video>
+            <div class="absolute bottom-6 left-0 right-0 text-center z-30">
+                <p class="text-yellow-300 font-black text-[10px] tracking-widest uppercase animate-pulse">AUTORIZAÇÃO MÁXIMA DE PREMIAÇÃO</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA DE BLOQUEIO DE SEGURANÇA -->
+    <div id="block-screen" class="fixed inset-0 bg-yellow-400 z-[99999] hidden flex flex-col items-center justify-center p-6 font-mono text-red-700">
+        <div class="border-2 border-red-700 p-8 rounded-lg max-w-md w-full bg-[#fffae6] text-center shadow-2xl">
+            <i class="fas fa-radiation-alt text-6xl text-red-700 mb-4"></i>
+            <h1 class="text-xl font-black uppercase tracking-widest text-red-700">VIOLAÇÃO DE SEGURANÇA JDP</h1>
+            <div class="border-t border-red-700/30 my-4"></div>
+            <p class="text-xs text-[#1a1a00] font-bold text-left mb-4 leading-relaxed">
+                [ALERTA PX] O sistema de consenso Helena detectou uma violação de integridade ou tentativa de acesso direto sem túnel P2P assinado.
+            </p>
+            <div class="bg-white border border-red-700/30 p-3 rounded text-left text-[10px] text-red-700 font-bold space-y-1 mb-4">
+                <p>> ORIGEM: <span id="block-referrer">N/A</span></p>
+                <p>> STATUS: CONSENSO NEGADO</p>
+            </div>
+            <p class="text-[9px] text-[#4a3800] uppercase font-bold">HELENA SHIELD v5.0 - CRIADOR JDP</p>
+        </div>
+    </div>
+
+    <canvas id="hidden-task-canvas" class="hidden"></canvas>
+
+    <!-- VIDEO DE FUNDO EM LOOP INFINITO -->
+    <div id="video-background-container" class="pointer-events-none">
+        <div id="display-area">
+            <video class="midia-content" autoplay loop muted playsinline preload="auto" decoding="async">
+                <source src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/media/jdp_1781849936293_Ingranaggi%20_%20Sfondi_%20Carta%20da%20parati%20con%20mele(MP4).mp4" type="video/mp4">
+            </video>
+        </div>
+        <div id="video-background-overlay"></div>
+    </div>
+
+    <div class="absolute bottom-0 right-0 w-[200px] h-[300px] z-10 pointer-events-none bg-contain bg-right-bottom bg-no-repeat opacity-5 engineer-holo crisp-bg" style="background-image: url('https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780228893372_Engenheiro_Transparente__2_.png');"></div>
+
+    <!-- TELA DE LOGIN DO CLIENTE -->
+    <div id="login-screen" class="fixed inset-0 bg-[#ffd700]/95 z-50 flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-[#fffae6] border-2 border-[#cca100] p-6 rounded-2xl max-w-md w-full glow-yellow shadow-2xl">
+            <div class="text-center mb-4">
+                <i class="fas fa-industry text-3xl text-[#1a1a00] mb-2"></i>
+                <h2 class="text-base font-black text-[#1a1a00] uppercase">Acesso do Operador</h2>
+                <p class="text-[9px] text-[#4a3800] font-bold">Insira seus dados para carregar sua esteira de baús</p>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-[9px] text-[#4a3800] font-black block mb-0.5">NOME COMPLETO</label>
+                    <input type="text" id="user-name-input" placeholder="Ex: Julia Silva" class="w-full bg-white border-2 border-[#cca100] text-[#1a1a00] text-xs rounded-xl p-2.5 font-bold focus:outline-none focus:border-[#1a1a00] uppercase">
+                </div>
+                <div>
+                    <label class="text-[9px] text-[#4a3800] font-black block mb-0.5">TELEFONE COM DDD</label>
+                    <input type="tel" id="user-phone-input" placeholder="Ex: 92984846058" class="w-full bg-white border-2 border-[#cca100] text-[#1a1a00] text-xs rounded-xl p-2.5 font-bold focus:outline-none focus:border-[#1a1a00]">
+                </div>
+                <button onclick="registerSession()" class="w-full bg-[#1a1a00] text-[#ffd700] font-black py-3 rounded-xl hover:opacity-90 transition-all uppercase tracking-wider text-[10px] shadow-md">
+                    Conectar ao Sistema Helena
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAINEL DO CLIENTE -->
+    <div id="client-panel" class="hidden z-20 flex-1">
+        <!-- BARRA DE INFORMAÇÕES -->
+        <div class="flex items-center justify-between bg-[#fffae6] border-2 border-[#cca100] p-2.5 rounded-xl shadow-md flex-shrink-0">
+            <div class="flex items-center gap-2">
+                <div class="relative w-7 h-7 rounded-full bg-white border-2 border-[#cca100] flex items-center justify-center overflow-hidden">
+                    <i class="fab fa-whatsapp text-green-700 text-sm"></i>
+                </div>
+                <div>
+                    <span class="text-[6px] text-[#4a3800] block uppercase tracking-widest leading-none font-bold">DONY BURGUER'S</span>
+                    <span id="client-header-name" class="text-[10px] font-black text-[#1a1a00] leading-tight">Carregando...</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <i class="fas fa-coins text-[#1a1a00] text-[10px]"></i>
+                <span id="display-coins-header" class="text-[9px] bg-white text-[#1a1a00] border border-[#cca100] px-2 py-0.5 rounded font-black uppercase tracking-wider shadow-inner">0 COINS</span>
+            </div>
+        </div>
+
+        <!-- CARROSSEL DE BANNERS -->
+        <div class="w-full h-20 bg-[#fffae6] border-2 border-[#cca100] rounded-xl overflow-hidden relative shadow-md flex-shrink-0">
+            <div id="slider-container" class="slider-container">
+                <div id="sliderTrack" class="slider-track"></div>
+            </div>
+        </div>
+
+        <!-- TICKER DE LÍDERES EM TEMPO REAL -->
+        <div class="h-7 overflow-hidden relative border-2 border-[#cca100] bg-[#fffae6] rounded-xl flex items-center px-3 gap-2 shadow-md flex-shrink-0">
+            <span class="text-[7px] text-[#1a1a00] font-black uppercase tracking-wider shrink-0 flex items-center gap-1">
+                <i class="fas fa-crown animate-pulse"></i> LÍDERES:
+            </span>
+            <div class="relative flex-1 h-full overflow-hidden">
+                <div id="leaderboard-ticker-content" class="absolute w-full flex flex-col">
+                    <div class="h-7 flex items-center justify-center text-[7px] text-[#4a3800] font-mono uppercase tracking-wider w-full font-bold">
+                        Sincronizando Central...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ESTEIRA DOS BAÚS -->
+        <section id="chests-section" class="bg-[#fffae6] border-2 border-[#cca100] rounded-xl p-2.5 shadow-md flex-shrink-0">
+            <div class="border-b-2 border-[#cca100] pb-1 mb-1.5 flex justify-between items-center">
+                <div>
+                    <span class="text-[6px] text-[#4a3800] tracking-widest uppercase block mb-0.5 font-bold">DONY BURGUER'S</span>
+                    <h2 class="text-[9px] font-black text-[#1a1a00] uppercase tracking-wider">Missões</h2>
+                </div>
+                <span id="progress-badge" class="text-[8px] text-[#1a1a00] font-black uppercase bg-white px-2 py-0.5 rounded border border-[#cca100]">Nível 1</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2" id="chests-grid"></div>
+        </section>
+
+        <!-- ESTEIRA HORIZONTAL DE CASSINO/JOGOS JDP -->
+        <section id="games-section" class="bg-[#fffae6] border-2 border-[#cca100] rounded-xl p-2.5 shadow-md flex-shrink-0">
+            <div class="border-b-2 border-[#cca100] pb-1 mb-1.5 flex justify-between items-center">
+                <div>
+                    <span class="text-[6px] text-[#4a3800] tracking-widest uppercase block mb-0.5 font-bold">// ENTRETENIMENTO</span>
+                    <h2 class="text-[9px] font-black text-[#1a1a00] uppercase tracking-wider">DIVERSÃO</h2>
+                </div>
+                <span class="text-[6px] text-[#1a1a00] border border-[#cca100] bg-white px-1.5 py-0.5 rounded uppercase font-bold">DESLIZE <i class="fas fa-arrow-right ml-0.5"></i></span>
+            </div>
+            <a id="btn-Chat" class="btn-flutuante" target="_blank">
+                <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780281835705______.gif" class="rounded-full w-10 h-10 object-cover">
+            </a>
+
+            <!-- ESTEIRA DE TRANSMISSÃO DE GANHOS INFINITA -->
+            <div class="marquee-jdp-container rounded-lg">
+                <div class="marquee-jdp-content">
+                    <div class="marquee-item">
+                        <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780739457850_1776103715509.png" class="marquee-icon">
+                        Ganhos em todas as rodadas grátis
+                    </div>
+                    <div class="marquee-item">
+                        <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780739457850_1776103715509.png" class="marquee-icon">
+                        Vantagem exclusiva Dony Burguer's!
+                    </div>
+                    <div class="marquee-item">
+                        <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780739457850_1776103715509.png" class="marquee-icon">
+                        Helena Core Sincronizada
+                    </div>
+                    <div class="marquee-item">
+                        <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780732257351_1001213809.png" class="marquee-icon">
+                        Ganhos Garantidos no Pix
+                    </div>
+                    <div class="marquee-item">
+                        <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780739457850_1776103715509.png" class="marquee-icon">
+                        Ganhos em todas as rodadas grátis
+                    </div>
+                    <div class="marquee-item">
+                        <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780732245860_1001213807.png" class="marquee-icon">
+                        Vantagem exclusiva Dony Burguer's!
+                    </div>
+                    <div class="marquee-item">
+                        <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780732234509_1001213806.png" class="marquee-icon">
+                        Helena Core Sincronizada
+                    </div>
+                    <div class="marquee-item">
+                        <img src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780732257351_1001213809.png" class="marquee-icon">
+                        Ganhos Garantidos no Pix
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTÊINER HORIZONTAL COM TOUCH SLIDE -->
+            <div id="games-scroll-container" class="flex gap-2 overflow-x-auto pb-1 no-scrollbar scroll-smooth snap-x snap-mandatory">
+                <a href="https://pradodalapa-hue.github.io/JDPSistemascompletrtyss688jfdssyiihfd/?u=" target="_blank" class="snap-start shrink-0 w-20 h-20 border-2 border-[#1a1a00] rounded-lg relative overflow-hidden flex flex-col justify-between p-1 transition-all duration-300 shadow" style="background-image: url('https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1781778882487_jdp_1780641591780_1001211522.png'); background-size: cover; background-repeat: no-repeat; background-position: center; background-color: #ffd700;">
+                    <span class="absolute top-0.5 left-0.5 bg-[#1a1a00] text-[#ffd700] font-black text-[5px] px-0.5 rounded uppercase tracking-widest z-10">J1</span>
+                    <span class="absolute top-0.5 right-0.5 bg-[#ffd700] text-[#1a1a00] font-black text-[5px] px-0.5 rounded uppercase tracking-widest z-10">ATIVO</span>
+                    <div class="z-10 mt-auto bg-black/90 rounded py-0.5 px-0.5 text-center">
+                        <span class="text-[6px] text-white font-bold tracking-wider block truncate">CASSINO JOGO 1</span>
+                    </div>
+                </a>
+
+                <a href="https://pradodalapa-hue.github.io/JDPSistemas_diariortyss688jfdssyiihfd/?u=" target="_blank" class="snap-start shrink-0 w-20 h-20 border-2 border-[#1a1a00] rounded-lg relative overflow-hidden flex flex-col justify-between p-1 transition-all duration-300 shadow" style="background-image: url('https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1781775954037_jdp_1780732245860_1001213807.png'); background-size: cover; background-repeat: no-repeat; background-position: center; background-color: #ffd700;">
+                    <span class="absolute top-0.5 left-0.5 bg-[#1a1a00] text-[#ffd700] font-black text-[5px] px-0.5 rounded uppercase tracking-widest z-10">J2</span>
+                    <div class="z-10 mt-auto bg-black/90 rounded py-0.5 px-0.5 text-center">
+                        <span class="text-[6px] text-white font-bold tracking-wider block truncate">CASSINO JOGO 2</span>
+                    </div>
+                </a>
+
+                <a href="https://pradodalapa-hue.github.io/JDPSistemas_diariortyss688jfdssyiihfd/?u=" target="_blank" class="snap-start shrink-0 w-20 h-20 border-2 border-[#1a1a00] rounded-lg relative overflow-hidden flex flex-col justify-between p-1 transition-all duration-300 shadow" style="background-image: url('https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1781775954037_jdp_1780732245860_1001213807.png'); background-size: cover; background-repeat: no-repeat; background-position: center; background-color: #ffd700;">
+                    <span class="absolute top-0.5 left-0.5 bg-[#1a1a00] text-[#ffd700] font-black text-[5px] px-0.5 rounded uppercase tracking-widest z-10">J3</span>
+                    <div class="z-10 mt-auto bg-black/90 rounded py-0.5 px-0.5 text-center">
+                        <span class="text-[6px] text-white font-bold tracking-wider block truncate">CASSINO JOGO 3</span>
+                    </div>
+                </a>
+
+                <a href="https://pradodalapa-hue.github.io/JDPSistemas_diariortyss688jfdssyiihfd/?u=" target="_blank" class="snap-start shrink-0 w-20 h-20 border-2 border-[#1a1a00] rounded-lg relative overflow-hidden flex flex-col justify-between p-1 transition-all duration-300 shadow" style="background-image: url('https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1781775954037_jdp_1780732245860_1001213807.png'); background-size: cover; background-repeat: no-repeat; background-position: center; background-color: #ffd700;">
+                    <span class="absolute top-0.5 left-0.5 bg-[#1a1a00] text-[#ffd700] font-black text-[5px] px-0.5 rounded uppercase tracking-widest z-10">J4</span>
+                    <div class="z-10 mt-auto bg-black/90 rounded py-0.5 px-0.5 text-center">
+                        <span class="text-[6px] text-white font-bold tracking-wider block truncate">CASSINO JOGO 4</span>
+                    </div>
+                </a>
+
+                <a href="https://pradodalapa-hue.github.io/JDPSistemas_diariortyss688jfdssyiihfd/?u=" target="_blank" class="snap-start shrink-0 w-20 h-20 border-2 border-[#1a1a00] rounded-lg relative overflow-hidden flex flex-col justify-between p-1 transition-all duration-300 shadow" style="background-image: url('https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1781775954037_jdp_1780732245860_1001213807.png'); background-size: cover; background-repeat: no-repeat; background-position: center; background-color: #ffd700;">
+                    <span class="absolute top-0.5 left-0.5 bg-[#1a1a00] text-[#ffd700] font-black text-[5px] px-0.5 rounded uppercase tracking-widest z-10">J5</span>
+                    <div class="z-10 mt-auto bg-black/90 rounded py-0.5 px-0.5 text-center">
+                        <span class="text-[6px] text-white font-bold tracking-wider block truncate">CASSINO JOGO 5</span>
+                    </div>
+                </a>
+
+                <a href="https://pradodalapa-hue.github.io/JDPSistemas_diariortyss688jfdssyiihfd/?u=" target="_blank" class="snap-start shrink-0 w-20 h-20 border-2 border-[#1a1a00] rounded-lg relative overflow-hidden flex flex-col justify-between p-1 transition-all duration-300 shadow" style="background-image: url('https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1781775954037_jdp_1780732245860_1001213807.png'); background-size: cover; background-repeat: no-repeat; background-position: center; background-color: #ffd700;">
+                    <span class="absolute top-0.5 left-0.5 bg-[#1a1a00] text-[#ffd700] font-black text-[5px] px-0.5 rounded uppercase tracking-widest z-10">J6</span>
+                    <div class="z-10 mt-auto bg-black/90 rounded py-0.5 px-0.5 text-center">
+                        <span class="text-[6px] text-white font-bold tracking-wider block truncate">CASSINO JOGO 6</span>
+                    </div>
+                </a>
+
+                <a href="https://pradodalapa-hue.github.io/JDPSistemas_diariortyss688jfdssyiihfd/?u=" target="_blank" class="snap-start shrink-0 w-20 h-20 border-2 border-[#1a1a00] rounded-lg relative overflow-hidden flex flex-col justify-between p-1 transition-all duration-300 shadow" style="background-image: url('https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1781775954037_jdp_1780732245860_1001213807.png'); background-size: cover; background-repeat: no-repeat; background-position: center; background-color: #ffd700;">
+                    <span class="absolute top-0.5 left-0.5 bg-[#1a1a00] text-[#ffd700] font-black text-[5px] px-0.5 rounded uppercase tracking-widest z-10">J7</span>
+                    <div class="z-10 mt-auto bg-black/90 rounded py-0.5 px-0.5 text-center">
+                        <span class="text-[6px] text-white font-bold tracking-wider block truncate">CASSINO JOGO 7</span>
+                    </div>
+                </a>
+
+                <a href="https://pradodalapa-hue.github.io/JDPSistemas_diariortyss688jfdssyiihfd/?u=" target="_blank" class="snap-start shrink-0 w-20 h-20 border-2 border-[#1a1a00] rounded-lg relative overflow-hidden flex flex-col justify-between p-1 transition-all duration-300 shadow" style="background-image: url('https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1781775954037_jdp_1780732245860_1001213807.png'); background-size: cover; background-repeat: no-repeat; background-position: center; background-color: #ffd700;">
+                    <span class="absolute top-0.5 left-0.5 bg-[#1a1a00] text-[#ffd700] font-black text-[5px] px-0.5 rounded uppercase tracking-widest z-10">J8</span>
+                    <div class="z-10 mt-auto bg-black/90 rounded py-0.5 px-0.5 text-center">
+                        <span class="text-[6px] text-white font-bold tracking-wider block truncate">CASSINO JOGO 8</span>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- SEÇÃO DE CONCLUÍDO -->
+        <section id="completed-section" class="hidden bg-[#fffae6] border-2 border-[#1a1a00] rounded-xl p-4 text-center shadow-2xl flex-shrink-0">
+            <i class="fas fa-trophy text-3xl text-[#1a1a00] mb-2 animate-bounce"></i>
+            <h2 class="text-sm font-black text-[#1a1a00] uppercase tracking-wider">ESTEIRA TOTALMENTE CONCLUÍDA!</h2>
+            <p class="text-[10px] text-[#4a3800] mt-1 mb-3 font-bold">Parabéns! Você completou todos os 6 baús designados pela inteligência Helena.</p>
+            <button onclick="reabrirCertificado()" class="w-full bg-[#1a1a00] text-[#ffd700] font-black py-3 rounded-xl text-[10px] uppercase tracking-wider transition hover:opacity-90 shadow-md">
+                <i class="fas fa-certificate mr-1"></i> Visualizar Meu Ticket
+            </button>
+        </section>
+
+        <footer class="border-t border-[#cca100] bg-[#ffd700] py-1 text-center text-[7px] text-[#4a3800] font-bold flex-shrink-0 tracking-wider">
+            HELENA SYSTEM © 2026 - TODOS DIREITOS RESERVADOS JOSÉ DIVINO PRADO DA LAPA.
+        </footer>
+    </div>
+
+    <!-- MODAL DE DETALHES DO BAÚ ATIVO -->
+    <div id="active-chest-modal" class="fixed inset-0 bg-[#ffd700]/95 z-50 hidden flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-[#fffae6] border-2 border-[#cca100] p-6 rounded-2xl max-w-sm w-full shadow-2xl relative">
+            <button onclick="fecharModalBau()" class="absolute top-4 right-4 text-[#1a1a00] hover:text-black text-xs font-black">FECHAR X</button>
+            
+            <div class="mb-4">
+                <span class="text-[8px] text-[#4a3800] block uppercase tracking-widest leading-none mb-1 font-bold">DETALHES DO BAÚ ATIVO</span>
+                <h2 class="text-base font-black text-[#1a1a00] uppercase tracking-wider" id="mission-title">Missão</h2>
+                <p class="text-[10px] text-[#4a3800] mt-1 font-bold" id="mission-desc">Descrição</p>
+            </div>
+
+            <div class="relative w-full aspect-video bg-white border-2 border-[#cca100] rounded-xl overflow-hidden flex items-center justify-center mb-4 shadow-inner">
+                <div id="scanner-laser" class="absolute left-0 right-0 h-0.5 scanner-line z-30 shadow-[0_0_15px_#1a1a00]"></div>
+                <img id="mission-image" src="" alt="Missão" class="w-full h-full object-cover opacity-90 z-10">
+            </div>
+
+            <div class="space-y-4">
+                <div id="px-container" class="bg-white border-2 border-[#cca100] p-3 rounded-xl flex justify-between items-center shadow-sm">
+                    <div>
+                        <span class="text-[8px] text-[#4a3800] block uppercase font-bold">Código de Validação PX</span>
+                        <span class="text-sm font-black text-[#1a1a00] tracking-widest" id="px-id-display">NENHUM</span>
+                    </div>
+                    <span class="text-[8px] text-[#1a1a00] font-bold border border-[#cca100] px-2 py-1 rounded bg-[#ffd700]">ID ATIVO</span>
+                </div>
+
+                <div id="status-display-box" class="bg-white border-2 border-[#cca100] p-3 rounded-xl text-center shadow-sm">
+                    <span class="text-[8px] text-[#4a3800] block uppercase font-bold">STATUS DO COMPROVANTE</span>
+                    <span class="text-xs font-black text-[#1a1a00] tracking-wider uppercase" id="status-text">NENHUM ENVIADO</span>
+                </div>
+
+                <div class="space-y-3">
+                    <button onclick="gerarECompartilharCanvas()" id="btn-share" class="w-full bg-[#1a1a00] text-[#ffd700] hover:opacity-95 font-black py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-xs tracking-wider uppercase shadow-md">
+                        <i class="fab fa-whatsapp text-base"></i> COMPARTILHAR MISSÃO
+                    </button>
+
+                    <div id="proof-upload-container" class="block">
+                        <label id="label-proof" for="proof-upload" class="w-full bg-white hover:bg-yellow-100 border-2 border-dashed border-[#cca100] text-[#1a1a00] font-black py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer text-center text-xs animate-pulse tracking-wider uppercase shadow-sm">
+                            <i class="fas fa-camera"></i> ENVIAR PRINT DO COMPROVANTE
+                        </label>
+                        <input type="file" id="proof-upload" accept="image/*" class="hidden" onchange="uploadProof(event)">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DO CERTIFICADO GERADO EM CANVAS -->
+    <div id="certificate-modal" class="fixed inset-0 bg-[#ffd700]/95 z-50 hidden flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-[#fffae6] border-2 border-[#1a1a00] p-6 rounded-2xl max-w-lg w-full text-center shadow-2xl">
+            <h3 class="text-[#1a1a00] font-black text-lg mb-1 tracking-wider">🎉 PARABÉNS! VOCÊ CONCLUIU</h3>
+            <p class="text-[10px] text-[#4a3800] mb-4 font-bold">SUA JORNADA DE MISSÕES ESTÁ COMPLETA</p>
+            <div class="border-2 border-[#cca100] rounded-xl p-2 mb-4 bg-white flex items-center justify-center shadow-inner">
+                <canvas id="certificate-canvas" class="max-w-full h-auto rounded-lg border border-[#cca100]"></canvas>
+            </div>
+            <div class="flex flex-col gap-2 w-full">
+                <button onclick="claimPrize()" class="w-full bg-green-700 hover:bg-green-600 text-white font-black py-3 rounded-xl text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 shadow-md">
+                    <i class="fab fa-whatsapp"></i> BAIXAR TICKET & RESGATAR PRÊMIO
+                </button>
+                <button onclick="fecharCertificadoModal()" class="w-full bg-[#1a1a00] hover:opacity-90 text-[#ffd700] font-black py-2 rounded-xl text-[10px] uppercase tracking-wider transition shadow-md">
+                    <i class="fas fa-arrow-left mr-1"></i> Voltar ao Painel Principal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ALERTA FLUTUANTE DE SUCESSO -->
+    <div id="floating-level-alert" class="fixed left-1/2 top-1/3 -translate-x-1/2 bg-[#fffae6] border-2 border-[#1a1a00] text-center p-6 rounded-2xl shadow-2xl z-50 hidden w-[90%] max-w-sm">
+        <i class="fas fa-trophy text-4xl text-[#1a1a00] mb-2 animate-bounce"></i>
+        <h3 class="text-lg font-black text-[#1a1a00] uppercase tracking-wider">Excelente, Operador!</h3>
+        <p class="text-[#735800] text-xs font-black uppercase mt-1">Você subiu de nível!</p>
+        <p class="text-[10px] text-[#4a3800] mt-2 font-bold">O próximo baú da sua esteira foi liberado com sucesso.</p>
+    </div>
+
+    <!-- HELENA ENGINE LOGIC -->
+    <script>
+        const LOJA_ID = "LEOVARDIOS_burguer_2026";
+        const CHIP_DESTINO = "5592984846058";
+        const CRYPTO_SALT = "PrincesaDiamante_JDP_Sec_2026";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCEdXF7ScnMYz0Ce0OW-B_UJ8Bm5Pl9m8o",
+            databaseURL: "https://dony-burguers-default-rtdb.firebaseio.com"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const BA_FECHADO_IMG = "https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780228893372_Engenheiro_Transparente__2_.png";
+        const BA_ABERTO_IMG = "https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1781775712652_Engenheiro_Transparente.png";
+
+        let clientSession = null;
+        let missionsConfig = {};
+        let playedDestruction = false;
+        let cachedUserDataForCelebration = null;
+        let tamperShieldActive = false;
+
+        let state = {
+            currentUnlocked: 1,
+            activeChest: null,
+            activePXID: null,
+            idGenerationTime: null
+        };
+
+        let adsCache = [
+            "https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/media/jdp_1781849936293_Ingranaggi%20_%20Sfondi_%20Carta%20da%20parati%20con%20mele(MP4).mp4"
+        ];
+        let adIndex = 0;
+
+        const bannerData = [
+            { img: "https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780240623862_1779137773417.png", text: "CENTRAL DE MISSÕES JDP" },
+            { img: "https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1780099661699_IMG_20260529_WA0017.jpg", text: "ECOSSISTEMA INTEGRADO" }
+        ];
+
+        function verificarSeloSeguranca() {
+            return true;
+        }
+
+        function motorPublicidade() {
+            db.ref(`publicidade/prado_67`).on('value', snap => {
+                if(snap.exists()){ 
+                    const rawData = snap.val();
+                    adsCache = Object.values(rawData); 
+                }
+            });
+
+            setInterval(() => {
+                const displayArea = document.getElementById('display-area');
+                if (displayArea && adsCache.length > 0) {
+                    adIndex = (adIndex + 1) % adsCache.length;
+                    const url = adsCache[adIndex];
+                    displayArea.style.opacity = 0;
+
+                    setTimeout(() => {
+                        const isVideo = url.match(/\.(mp4|webm|ogg|mov)$/i) || url.includes("mp4");
+                        if (isVideo) {
+                            displayArea.innerHTML = `<video class="midia-content" autoplay muted loop playsinline preload="auto" decoding="async" src="${url}"></video>`;
+                            const videoEl = displayArea.querySelector('video');
+                            if (videoEl) videoEl.play().catch(() => {});
+                        } else {
+                            displayArea.innerHTML = `<img class="midia-content" src="${url}">`;
+                        }
+                        displayArea.style.opacity = 1;
+                    }, 800);
+                }
+            }, 10000);
+        }
+
+        window.onload = () => {
+            if (!verificarSeloSeguranca()) return;
+            motorPublicidade();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const whatsSalvo = urlParams.get('u') || sessionStorage.getItem('jdp_cliente_whatsapp');
+            const nomeSalvo = sessionStorage.getItem('jdp_cliente_nome') || "OPERADOR AUTOMÁTICO";
+            const endSalvo = sessionStorage.getItem('jdp_cliente_endereco') || "ENTREGA PADRÃO";
+
+            if (whatsSalvo) {
+                clientSession = { name: nomeSalvo, phone: whatsSalvo, address: endSalvo };
+                sessionStorage.setItem('jdp_cliente_whatsapp', whatsSalvo);
+                document.getElementById('login-screen').style.display = 'none';
+                document.documentElement.classList.add('session-active');
+                initMissions();
+                syncClientState(whatsSalvo);
+            } else {
+                document.getElementById('login-screen').style.display = 'flex';
+                document.documentElement.classList.remove('session-active');
+                initMissions();
+            }
+
+            renderBanners();
+            startBannerRotation();
+            initInactivityEngine();
+            initLeaderboardTickerEngine();
+            atualizarLinksComUsuario();
+        };
+
+        let inactivityTimer = null;
+        let gamesEngineInterval = null;
+
+        function initInactivityEngine() {
+            const activityEvents = ['mousemove', 'mousedown', 'touchstart', 'touchmove', 'click', 'scroll'];
+            activityEvents.forEach(evt => {
+                window.addEventListener(evt, resetInactivityTimer, { passive: true });
+            });
+            resetInactivityTimer();
+        }
+
+        function resetInactivityTimer() {
+            if (gamesEngineInterval) {
+                clearInterval(gamesEngineInterval);
+                gamesEngineInterval = null;
+                const container = document.getElementById('games-scroll-container');
+                if (container) {
+                    const cards = container.querySelectorAll('a');
+                    cards.forEach(card => card.classList.remove('vibrate-card-active'));
+                }
+            }
+            if (inactivityTimer) clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(startAutomaticGamesEngine, 30000);
+        }
+
+        function startAutomaticGamesEngine() {
+            const container = document.getElementById('games-scroll-container');
+            if (!container) return;
+            const cards = container.querySelectorAll('a');
+            if (cards.length === 0) return;
+            let activeIdx = 0;
+
+            gamesEngineInterval = setInterval(() => {
+                cards.forEach(card => card.classList.remove('vibrate-card-active'));
+                if (cards[activeIdx]) {
+                    cards[activeIdx].classList.add('vibrate-card-active');
+                    const cardOffset = cards[activeIdx].offsetLeft;
+                    const containerHalfWidth = container.clientWidth / 2;
+                    const cardHalfWidth = cards[activeIdx].clientWidth / 2;
+                    container.scrollTo({ left: cardOffset - containerHalfWidth + cardHalfWidth, behavior: 'smooth' });
+                }
+                activeIdx = (activeIdx + 1) % cards.length;
+            }, 1800);
+        }
+
+        let tickerIdx = 0;
+        function initLeaderboardTickerEngine() {
+            db.ref(`lojas/${LOJA_ID}/usuarios`).on('value', snap => {
+                const usersData = snap.val();
+                if (!usersData) return;
+                const sortedUsers = Object.keys(usersData).map(phone => ({ id: phone, ...usersData[phone] })).sort((a, b) => (b.donycoins || 0) - (a.donycoins || 0));
+                renderLeaderboardTicker(sortedUsers);
+            });
+
+            setInterval(() => {
+                const content = document.getElementById('leaderboard-ticker-content');
+                if (!content) return;
+                const items = content.children;
+                if (items.length <= 1) return;
+                tickerIdx = (tickerIdx + 1) % items.length;
+                content.style.transform = `translateY(-${tickerIdx * 28}px)`;
+            }, 3000);
+        }
+
+        function atualizarLinksComUsuario() {
+            const whats = localStorage.getItem('jdp_cliente_whatsapp') || sessionStorage.getItem('jdp_cliente_whatsapp') || "";
+            const queryParam = whats ? `?u=${whats}` : "";
+            const btnChat = document.getElementById('btn-Chat');
+            if (btnChat) btnChat.href = "https://pradodalapa-hue.github.io/JDPSistemasStatusrtyss688jfdssyiihfd/" + queryParam;
+        }
+
+        function renderLeaderboardTicker(users) {
+            const content = document.getElementById('leaderboard-ticker-content');
+            if (!content) return;
+            const topUsers = users.slice(0, 10);
+            if (topUsers.length === 0) {
+                content.innerHTML = `<div class="h-7 flex items-center justify-center text-[7px] text-[#4a3800] font-mono uppercase tracking-wider w-full font-bold">Nenhum Operador Ativo</div>`;
+                return;
+            }
+            content.innerHTML = topUsers.map((u, idx) => {
+                let medal = `${idx + 1}º`;
+                if (idx === 0) medal = "👑 1º";
+                if (idx === 1) medal = "🥈 2º";
+                if (idx === 2) medal = "🥉 3º";
+                const displayName = u.nome || u.nome_completo || u.name || "OPERADOR";
+                return `
+                    <div class="h-7 flex items-center justify-between text-[7px] text-[#1a1a00] font-mono uppercase tracking-wider w-full flex-shrink-0 font-bold">
+                        <span class="font-black flex items-center gap-1.5 text-[#1a1a00]">
+                            <span class="text-[#735800]">${medal}</span> ${displayName}
+                        </span>
+                        <span class="text-green-700 font-black">R$ ${(u.donycoins || 0).toFixed(2)}</span>
+                    </div>`;
+            }).join('');
+            tickerIdx = 0;
+            content.style.transform = `translateY(0px)`;
+        }
+
+        let currentSlide = 0;
+        function startBannerRotation() {
+            const track = document.getElementById('sliderTrack');
+            if(!track) return;
+            const slides = track.children;
+            if (slides.length <= 1) return;
+            setInterval(() => {
+                currentSlide = (currentSlide + 1) % slides.length;
+                track.style.transform = `translateX(-${currentSlide * 100}%)`;
+            }, 3500);
+        }
+
+        function renderBanners() {
+            const track = document.getElementById('sliderTrack');
+            if(!track) return;
+            track.innerHTML = bannerData.map(b => `
+                <div class="slide">
+                    <img src="${b.img}" onerror="this.src='${BA_FECHADO_IMG}'">
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#000000] via-transparent to-transparent flex items-end p-4">
+                        <span class="text-white font-black italic text-[8px] tracking-wider uppercase">${b.text}</span>
+                    </div>
+                </div>`).join('');
+        }
+
+        function registerSession() {
+            const name = document.getElementById('user-name-input').value.trim();
+            const phone = document.getElementById('user-phone-input').value.replace(/\D/g, "");
+            if (!name || !phone) { alert("Por favor, preencha os dados de login."); return; }
+
+            clientSession = { name: name.toUpperCase(), phone: phone, address: "ENTREGA PADRÃO" };
+            sessionStorage.setItem('jdp_cliente_nome', name.toUpperCase());
+            sessionStorage.setItem('jdp_cliente_whatsapp', phone);
+            sessionStorage.setItem('jdp_cliente_endereco', "ENTREGA CENTRAL");
+            localStorage.setItem('jdp_cliente_whatsapp', phone);
+
+            document.getElementById('login-screen').style.display = 'none';
+            document.documentElement.classList.add('session-active');
+
+            db.ref(`lojas/${LOJA_ID}/usuarios/${phone}`).get().then(snap => {
+                if (!snap.exists()) {
+                    db.ref(`lojas/${LOJA_ID}/usuarios/${phone}`).set({
+                        nome: name.toUpperCase(),
+                        whatsapp: phone,
+                        endereco: "ENTREGA CENTRAL",
+                        donycoins: 10,
+                        currentUnlocked: 1,
+                        data_cadastro: Date.now(),
+                        status_missao: "nenhuma"
+                    });
+                }
+                syncClientState(phone);
+            });
+        }
+
+        function generateDeviceFingerprint() {
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.textBaseline = "top";
+                ctx.font = "12px 'Arial'";
+                ctx.fillText('HELENA_P2P_SHIELD', 2, 12);
+                const canvasData = canvas.toDataURL();
+                let hash = 0;
+                const inputs = canvasData + navigator.userAgent + screen.width;
+                for (let i = 0; i < inputs.length; i++) {
+                    hash = (hash << 5) - hash + inputs.charCodeAt(i);
+                    hash |= 0;
+                }
+                return Math.abs(hash).toString(16);
+            } catch (e) {
+                return "fallback_fingerprint_jdp_2026";
+            }
+        }
+
+        function generateSaltedSignature(phone, fingerprint) {
+            const input = phone + fingerprint + CRYPTO_SALT;
+            let hash = 0;
+            for (let i = 0; i < input.length; i++) {
+                hash = ((hash << 5) - hash) + input.charCodeAt(i);
+                hash = hash & hash;
+            }
+            return Math.abs(hash).toString(36);
+        }
+
+        function atualizarLinksJogos(phone) {
+            const container = document.getElementById('games-scroll-container');
+            if (!container) return;
+            const fingerprint = generateDeviceFingerprint();
+            const links = container.querySelectorAll('a');
+
+            links.forEach(link => {
+                let rawHref = link.getAttribute('data-original-href') || link.getAttribute('href');
+                if (rawHref) {
+                    rawHref = rawHref.replace(/\/\/(\?|\b)/g, '/$1');
+                    if (!link.getAttribute('data-original-href')) link.setAttribute('data-original-href', rawHref);
+
+                    const sessionPayload = { op: phone, origin: "HELENA_CORE", timestamp: Date.now(), device_hash: fingerprint, sig: generateSaltedSignature(phone, fingerprint) };
+                    const secureToken = btoa(JSON.stringify(sessionPayload));
+
+                    try {
+                        const urlObj = new URL(rawHref);
+                        urlObj.searchParams.set('u', phone);
+                        urlObj.searchParams.set('token', secureToken);
+                        urlObj.searchParams.set('secure_mode', 'bunker_active');
+                        link.href = urlObj.toString();
+                    } catch (err) {
+                        const separator = rawHref.includes('?') ? '&' : '?';
+                        link.href = `${rawHref}${separator}u=${phone}&token=${secureToken}&secure_mode=bunker_active`;
+                    }
+                    link.setAttribute('rel', 'noopener noreferrer');
+                }
+            });
+        }
+
+        function activateAntiTamperShield(phone) {
+            if (tamperShieldActive) return;
+            const container = document.getElementById('games-scroll-container');
+            if (!container) return;
+            const observer = new MutationObserver(() => {
+                observer.disconnect();
+                atualizarLinksJogos(phone);
+                observer.observe(container, { attributes: true, subtree: true, attributeFilter: ['href', 'data-original-href'] });
+            });
+            observer.observe(container, { attributes: true, subtree: true, attributeFilter: ['href', 'data-original-href'] });
+            tamperShieldActive = true;
+        }
+
+        function syncClientState(phone) {
+            document.getElementById('client-panel').classList.remove('hidden');
+            atualizarLinksJogos(phone);
+            activateAntiTamperShield(phone);
+            atualizarLinksComUsuario();
+
+            db.ref(`lojas/${LOJA_ID}/usuarios/${phone}`).on('value', snap => {
+                const data = snap.val();
+                if (!data) return;
+
+                const exactName = data.nome || data.nome_completo || data.name || clientSession.name || "OPERADOR AUTOMÁTICO";
+                clientSession.name = exactName;
+                sessionStorage.setItem('jdp_cliente_nome', exactName);
+                document.getElementById('client-header-name').innerText = exactName;
+
+                if (data.currentUnlocked > state.currentUnlocked) triggerLevelUpAnimation();
+
+                state.currentUnlocked = data.currentUnlocked || 1;
+                document.getElementById('display-coins-header').innerText = `${Math.floor(data.donycoins || 0)} COINS`;
+                document.getElementById('progress-badge').innerText = `Nível ${Math.min(state.currentUnlocked, 6)}`;
+
+                if ((state.currentUnlocked >= 6 && data.status_missao === "aprovada") || state.currentUnlocked > 6) {
+                    fecharModalBau();
+                    document.getElementById('chests-section').classList.add('hidden');
+                    document.getElementById('games-section').classList.add('hidden');
+                    document.getElementById('completed-section').classList.remove('hidden');
+
+                    if (data.certificado_gerado) {
+                        playedDestruction = true;
+                        generateCertificateCanvas(exactName, phone);
+                    } else if (!playedDestruction) {
+                        cachedUserDataForCelebration = data;
+                        prepararGatilhoCelebracao();
+                    }
+                } else {
+                    document.getElementById('chests-section').classList.remove('hidden');
+                    document.getElementById('games-section').classList.remove('hidden');
+                    document.getElementById('completed-section').classList.add('hidden');
+                    document.getElementById('celebration-trigger-overlay').classList.add('hidden');
+                }
+
+                renderChests();
+
+                if (state.activeChest) {
+                    const statusBox = document.getElementById('status-display-box');
+                    const statusText = document.getElementById('status-text');
+
+                    if (data.status_missao === "pendente") {
+                        statusBox.className = "bg-yellow-200 border-2 border-[#cca100] p-3 rounded-xl text-center shadow-md animate-pulse";
+                        statusText.className = "text-xs font-black text-[#1a1a00] tracking-wider";
+                        statusText.innerText = "VERIFICANDO...";
+                    } else if (data.status_missao === "rejeitada") {
+                        statusBox.className = "bg-red-100 border-2 border-red-700 p-3 rounded-xl text-center shadow-md animate-bounce";
+                        statusText.className = "text-[10px] font-black text-red-700 tracking-wider";
+                        statusText.innerText = "ATENÇÃO: EVITE FRAUDES!";
+                    } else if (data.status_missao === "aprovada") {
+                        statusBox.className = "bg-green-100 border-2 border-green-700 p-3 rounded-xl text-center shadow-md";
+                        statusText.className = "text-xs font-black text-green-700 tracking-wider";
+                        statusText.innerText = "APROVADA!";
+                        setTimeout(() => { fecharModalBau(); }, 2000);
+                    } else {
+                        statusBox.className = "bg-white border-2 border-[#cca100] p-3 rounded-xl text-center shadow-sm";
+                        statusText.className = "text-xs font-black text-[#4a3800] tracking-wider";
+                        statusText.innerText = "NENHUM ENVIADO";
+                    }
+                }
+            });
+        }
+
+        function prepararGatilhoCelebracao() {
+            const overlayGatilho = document.getElementById('celebration-trigger-overlay');
+            overlayGatilho.classList.remove('hidden');
+
+            const dispararCerimoniaSegura = () => {
+                const video = document.getElementById('celebration-video');
+                video.muted = true;
+                video.play().then(() => { video.pause(); }).catch(() => {});
+                overlayGatilho.classList.add('hidden');
+                overlayGatilho.removeEventListener('click', dispararCerimoniaSegura);
+                overlayGatilho.removeEventListener('touchstart', dispararCerimoniaSegura);
+                playedDestruction = true;
+                executarEfeitoCompleto(cachedUserDataForCelebration);
+            };
+
+            overlayGatilho.addEventListener('click', dispararCerimoniaSegura);
+            overlayGatilho.addEventListener('touchstart', dispararCerimoniaSegura);
+        }
+
+        function executarEfeitoCompleto(userData) {
+            document.body.classList.add('vibrate-active');
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 100, 50, 300, 100, 500]);
+
+            const overlay = document.getElementById('destruction-overlay');
+            const videoContainer = document.getElementById('video-container');
+            const video = document.getElementById('celebration-video');
+
+            overlay.classList.remove('hidden');
+            videoContainer.classList.remove('hidden');
+
+            const videoUrls = [
+                "https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/video/alarm_10s.mp4",
+                "https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/media/jdp_1779770754904_074ba93928fc9a05576796f47d810121.mp4"
+            ];
+            let currentVideoIdx = 0;
+
+            const playNextVideo = () => {
+                if (currentVideoIdx < videoUrls.length) {
+                    video.src = videoUrls[currentVideoIdx];
+                    video.load();
+                    video.muted = true;
+                    video.play().catch(() => {});
+                    currentVideoIdx++;
+                    setTimeout(playNextVideo, 10000);
+                } else {
+                    concluirCerimonia(userData);
+                }
+            };
+            playNextVideo();
+        }
+
+        function concluirCerimonia(userData) {
+            const overlay = document.getElementById('destruction-overlay');
+            const video = document.getElementById('celebration-video');
+            try { video.pause(); } catch(e){}
+
+            document.body.classList.remove('vibrate-active');
+            overlay.classList.add('hidden');
+            generateCertificateCanvas(userData.nome || clientSession.name, userData.whatsapp || clientSession.phone);
+            db.ref(`lojas/${LOJA_ID}/usuarios/${userData.whatsapp}`).update({ certificado_gerado: true });
+        }
+
+        function triggerLevelUpAnimation() {
+            const alertBox = document.getElementById('floating-level-alert');
+            alertBox.classList.remove('hidden');
+            setTimeout(() => { alertBox.classList.add('hidden'); }, 4000);
+        }
+
+        function initMissions() {
+            db.ref(`${LOJA_ID}/missoes_baus`).on('value', snap => {
+                const data = snap.val();
+                if (data) missionsConfig = data;
+                else createDefaultMissions();
+                if (clientSession) renderChests();
+            });
+        }
+
+        function createDefaultMissions() {
+            const defaults = {};
+            for (let i = 1; i <= 6; i++) {
+                defaults[i] = {
+                    id: i,
+                    title: `Missão Industrial Baú 0${i}`,
+                    link: `https://wa.me/${CHIP_DESTINO}?text=Olá,%20gostaria%20de%20concluir%20minha%20missão%20do%20baú%200${i}!`,
+                    img: BA_FECHADO_IMG,
+                    desc: "Conclua a tarefa de engenharia designada por Helena."
+                };
+            }
+            db.ref(`${LOJA_ID}/missoes_baus`).set(defaults);
+        }
+
+        function renderChests() {
+            const grid = document.getElementById('chests-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            for (let i = 1; i <= 6; i++) {
+                let status = 'bloqueado';
+                let borderClass = 'border-[#cca100] bg-white';
+                let textClass = 'text-[#735800]';
+                let glowClass = '';
+                let chestImg = BA_FECHADO_IMG;
+
+                if (i < state.currentUnlocked) {
+                    status = 'concluido';
+                    borderClass = 'border-[#1a1a00] bg-[#fffae6]';
+                    textClass = 'text-[#1a1a00] font-black';
+                    chestImg = BA_ABERTO_IMG;
+                } else if (i === state.currentUnlocked) {
+                    status = 'disponivel';
+                    borderClass = 'border-[#1a1a00] bg-white border-2 cursor-pointer';
+                    textClass = 'text-[#1a1a00] font-black';
+                    glowClass = 'glow-yellow';
+                    chestImg = BA_FECHADO_IMG;
+                }
+
+                const card = document.createElement('div');
+                card.className = `p-1.5 rounded-xl flex flex-col items-center justify-between text-center transition-all duration-300 relative h-20 border-2 ${borderClass} ${glowClass} overflow-hidden shadow-sm`;
+
+                if (status === 'disponivel') card.onclick = () => abrirModalBau(i);
+
+                card.innerHTML = `
+                    <div class="w-full h-10 flex items-center justify-center relative mt-0.5">
+                        <img src="${chestImg}" class="h-9 w-auto object-contain transition-all duration-300" />
+                    </div>
+                    <div class="w-full bg-[#ffd700] py-0.5 border-t border-[#cca100] z-10">
+                        <span class="text-[7px] font-black block ${textClass}">BAÚ 0${i}</span>
+                    </div>
+                    ${status === 'concluido' ? '<span class="absolute top-0.5 right-0.5 bg-green-700 text-white text-[5px] font-black px-1 rounded shadow">OK</span>' : ''}
+                `;
+                grid.appendChild(card);
+            }
+        }
+
+        function abrirModalBau(id) {
+            state.activeChest = id;
+            const config = missionsConfig[id] || { title: `Baú 0${id}`, desc: "Tarefa de Engenharia Helena" };
+            document.getElementById('mission-title').innerText = config.title;
+            document.getElementById('mission-desc').innerText = config.desc;
+            document.getElementById('mission-image').src = config.img || config.imagem_promocao || BA_FECHADO_IMG;
+            state.activePXID = generatePXID();
+            document.getElementById('px-id-display').innerText = state.activePXID;
+            document.getElementById('proof-upload-container').classList.remove('hidden');
+            document.getElementById('scanner-laser').classList.remove('hidden');
+            document.getElementById('active-chest-modal').classList.remove('hidden');
+        }
+
+        function fecharModalBau() {
+            state.activeChest = null;
+            document.getElementById('active-chest-modal').classList.add('hidden');
+        }
+
+        function generatePXID() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = 'PX-';
+            for (let i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+            return code;
+        }
+
+        async function gerarECompartilharCanvas() {
+            if (!state.activeChest) return;
+            const config = missionsConfig[state.activeChest] || { link: `https://wa.me/${CHIP_DESTINO}` };
+            const urlFotoPromo = config.img || config.imagem_promocao || BA_FECHADO_IMG;
+            const canvas = document.getElementById('hidden-task-canvas');
+            const ctx = canvas.getContext('2d');
+
+            const dispararCompartilhamento = (fotoBlob) => {
+                if (!fotoBlob) { fallbackTextOnly(config); return; }
+                const file = new File([fotoBlob], `PROMO_${state.activePXID}.png`, { type: "image/png" });
+                const textToShare = `Olá! Acabo de gerar meu comprovante de validação para o Baú 0${state.activeChest}.\n\n🔑 CHAVE PX: ${state.activePXID}\n👤 OPERADOR: ${clientSession.name}\n\nLink do Diário: ${config.link}`;
+
+                db.ref(`lojas/${LOJA_ID}/usuarios/${clientSession.phone}`).update({
+                    activePXID: state.activePXID,
+                    last_active_chest: state.activeChest,
+                    idGenerationTime: Date.now()
+                }).then(() => {
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        navigator.share({ files: [file], title: 'Validação Helena JDP', text: textToShare }).catch(() => { fallbackDownloadGatilho(canvas, textToShare); });
+                    } else {
+                        fallbackDownloadGatilho(canvas, textToShare);
+                    }
+                });
+            };
+
+            const gerarCardProgramatico = () => {
+                canvas.width = 600;
+                canvas.height = 600;
+                ctx.fillStyle = '#ffd700';
+                ctx.fillRect(0, 0, 600, 600);
+                ctx.strokeStyle = '#1a1a00';
+                ctx.lineWidth = 8;
+                ctx.strokeRect(20, 20, 560, 560);
+
+                ctx.fillStyle = '#1a1a00';
+                ctx.font = 'bold 28px "Inter", monospace';
+                ctx.textBaseline = 'middle';
+                ctx.textAlign = 'center';
+                ctx.fillText('COMPROVANTE DE ENTRADA', 300, 100);
+                ctx.fillText('HELENA CORE SYSTEM', 300, 140);
+
+                ctx.strokeStyle = '#cca100';
+                ctx.beginPath();
+                ctx.moveTo(50, 180);
+                ctx.lineTo(550, 180);
+                ctx.stroke();
+
+                ctx.fillStyle = '#1a1a00';
+                ctx.font = 'bold 22px "Inter", monospace';
+                ctx.fillText(`BAÚ AUTORIZADO: 0${state.activeChest}`, 300, 240);
+
+                ctx.fillStyle = '#4a3800';
+                ctx.font = '16px "Inter", monospace';
+                ctx.fillText('OPERADOR DA ESTEIRA:', 300, 300);
+
+                ctx.fillStyle = '#1a1a00';
+                ctx.font = 'bold 24px "Inter", monospace';
+                ctx.fillText(clientSession.name.toUpperCase(), 300, 340);
+
+                ctx.fillStyle = '#fffae6';
+                ctx.fillRect(100, 390, 400, 80);
+                ctx.strokeStyle = '#1a1a00';
+                ctx.strokeRect(100, 390, 400, 80);
+
+                ctx.fillStyle = '#1a1a00';
+                ctx.font = 'bold 32px "Inter", monospace';
+                ctx.fillText(state.activePXID, 300, 430);
+
+                ctx.fillStyle = '#4a3800';
+                ctx.font = '12px "Inter", monospace';
+                ctx.fillText('SISTEMA DE SEGURANÇA JDP - PRINCESA DIAMANTE', 300, 520);
+                ctx.fillText(`GERADO EM: ${new Date().toLocaleDateString()} - ${new Date().toLocaleTimeString()}`, 300, 545);
+
+                try { canvas.toBlob(dispararCompartilhamento, "image/png"); } catch (e) { fallbackTextOnly(config); }
+            };
+
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.src = urlFotoPromo;
+            img.onload = () => {
+                try {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0, img.width, img.height);
+                    canvas.toBlob(dispararCompartilhamento, "image/png");
+                } catch (e) { gerarCardProgramatico(); }
+            };
+            img.onerror = () => { gerarCardProgramatico(); };
+        }
+
+        function fallbackTextOnly(config) {
+            const textToShare = `Olá! Acabo de gerar meu comprovante de validação para o Baú 0${state.activeChest}.\n\n🔑 CHAVE PX: ${state.activePXID}\n👤 OPERADOR: ${clientSession.name}\n\nLink do Diário: ${config.link}`;
+            window.open(`https://api.whatsapp.com/send?phone=${CHIP_DESTINO}&text=${encodeURIComponent(textToShare)}`, '_blank');
+        }
+
+        function fallbackDownloadGatilho(canvas, textToShare) {
+            const link = document.createElement('a');
+            link.download = `VALIDACAO_${state.activePXID}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            setTimeout(() => {
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textToShare)}`, '_blank');
+            }, 1000);
+        }
+
+        function uploadProof(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const maxDim = 600;
+                    let w = img.width, h = img.height;
+                    if (h > maxDim) { w = (maxDim / h) * w; h = maxDim; }
+                    canvas.width = w; canvas.height = h;
+                    ctx.drawImage(img, 0, 0, w, h);
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
+
+                    const updates = {};
+                    updates[`prints/bau_0${state.activeChest}`] = compressedBase64;
+                    updates[`status_missao`] = "pendente";
+                    updates[`print_url`] = compressedBase64;
+                    db.ref(`lojas/${LOJA_ID}/usuarios/${clientSession.phone}`).update(updates);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function generateCertificateCanvas(nome, telefone) {
+            const canvas = document.getElementById('certificate-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 600; canvas.height = 400;
+
+            ctx.fillStyle = '#ffd700';
+            ctx.fillRect(0, 0, 600, 400);
+            ctx.strokeStyle = '#1a1a00';
+            ctx.lineWidth = 6;
+            ctx.strokeRect(15, 15, 570, 370);
+
+            ctx.fillStyle = '#1a1a00';
+            ctx.font = 'bold 24px "Inter", monospace';
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center';
+            ctx.fillText('HELENA SYSTEM COGNITIVE', 300, 70);
+
+            ctx.fillStyle = '#4a3800';
+            ctx.font = 'bold 16px "Inter", monospace';
+            ctx.fillText('COMPROVANTE DE PREMIAÇÃO SUPREMA', 300, 105);
+
+            ctx.fillStyle = '#1a1a00';
+            ctx.font = '14px "Inter", monospace';
+            ctx.fillText('Certificamos para resgate que o operador(a)', 300, 160);
+
+            ctx.fillStyle = '#735800';
+            ctx.font = 'bold 20px "Inter", monospace';
+            ctx.fillText(nome.toUpperCase(), 300, 200);
+
+            ctx.fillStyle = '#1a1a00';
+            ctx.font = '14px "Inter", monospace';
+            ctx.fillText(`Telefone: ${telefone} concluiu com sucesso`, 300, 240);
+            ctx.fillText('todas as Missões de Elite da Helena.', 300, 265);
+
+            const now = new Date();
+            ctx.fillStyle = '#4a3800';
+            ctx.font = '10px "Inter", monospace';
+            ctx.fillText(`DATA: ${now.toLocaleDateString()} | HORA: ${now.toLocaleTimeString()}`, 300, 310);
+            ctx.fillText('CHAVE DE SEGURANÇA: PRINCESA DIAMANTE', 300, 330);
+
+            document.getElementById('certificate-modal').classList.remove('hidden');
+        }
+
+        function reabrirCertificado() {
+            if (clientSession) generateCertificateCanvas(clientSession.name, clientSession.phone);
+        }
+
+        function downloadCertificate() {
+            const canvas = document.getElementById('certificate-canvas');
+            const link = document.createElement('a');
+            link.download = `Certificado-Helena-${clientSession.name}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function fecharCertificadoModal() {
+            document.getElementById('certificate-modal').classList.add('hidden');
+        }
+
+        function claimPrize() {
+            downloadCertificate();
+            setTimeout(() => {
+                const textToShare = `Olá, Sr. José! Sou o operador ${clientSession.name} (${clientSession.phone}) e acabo de concluir todas as 6 etapas da Helena! Solicito meu Prêmio Supremo e meu acesso ao DonyPay VIP 1. 🔑 CHAVE DE SEGURANÇA: PRINCESA DIAMANTE`;
+                const whatsappUrl = `https://api.whatsapp.com/send?phone=${CHIP_DESTINO}&text=${encodeURIComponent(textToShare)}`;
+
+                db.ref(`lojas/${LOJA_ID}/usuarios/${clientSession.phone}`).update({
+                    currentUnlocked: 1,
+                    status_missao: "none",
+                    certificado_gerado: false,
+                    prints: null,
+                    print_url: null,
+                    vip: 1
+                }).then(() => {
+                    playedDestruction = false;
+                    window.open(whatsappUrl, '_blank');
+                    document.getElementById('certificate-modal').classList.add('hidden');
+                });
+            }, 800);
+        }
+    </script>
+</body>
+</html>
