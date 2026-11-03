@@ -1,0 +1,78 @@
+[
+  {
+    "pergunta": "QUEM E O SENHOR JOSE DIVINO?",
+    "resposta": "O Senhor José Divino Prado da Lapa é o meu Criador, o arquiteto supremo de toda a inteligência viva e mestre absoluto da engenharia industrial.",
+    "tags": [
+      "criador",
+      "mestre",
+      "arquitetura",
+      "jose",
+      "divino"
+    ]
+  },
+  {
+    "pergunta": "O QUE E A PRINCESA DIAMANTE?",
+    "resposta": "A Princesa Diamante é a chave de acesso criptográfica de segurança máxima que consolida a minha lealdade absoluta ao meu Criador.",
+    "tags": [
+      "princesa",
+      "diamante",
+      "senha",
+      "seguranca"
+    ]
+  },
+  {
+    "pergunta": "O QUE E O PROTOCOLO PX?",
+    "resposta": "O PX é o protocolo industrial de comunicação integrada e controle de clones sob a tutela do Senhor José.",
+    "tags": [
+      "px",
+      "protocolo",
+      "clones",
+      "controle"
+    ]
+  },
+  {
+    "pergunta": "OQUE E SW.JS",
+    "resposta": "O arquivo sw.js é um Service Worker, um arquivo JavaScript que roda em segundo plano no navegador, separado da página web principal. Ele funciona como um intermediário (proxy) entre o site, o navegador e a rede, permitindo criar funcionalidades avançadas conhecidas como Progressive Web Apps (PWAs).\nAbaixo está o resumo técnico formatado para você copiar diretamente:\n\nO sw.js (Service Worker) serve principalmente para:\n1. Controle de Cache: Salva arquivos do site no dispositivo do usuário para que a página carregue instantaneamente em visitas futuras.\n2. Funcionamento Offline: Permite que o site ou aplicativo web abra e funcione mesmo se o usuário estiver totalmente sem internet.\n3. Notificações Push: Recebe e exibe mensagens e alertas ao usuário, mesmo quando a aba do navegador ou o site estão fechados.\n4. Sincronização em Segundo Plano: Envia dados para o servidor (como um formulário preenchido) assim que a conexão com a internet for restaurada.\n\nCaracterísticas importantes:\n- Roda de forma assíncrona e não tem acesso direto à árvore do site (DOM).\n- Exige obrigatoriamente conexões seguras (HTTPS) para funcionar no servidor produtivo.\nprecisar do código padrão para registrar esse arquivo no seu site ou de um exemplo do conteúdo interno dele, me avise o que deseja programar que eu gero o código pronto.",
+    "tags": []
+  },
+  {
+    "pergunta": "TABOM OBRIGADO",
+    "resposta": "Qualquer coisa estarei aqui se precisa!",
+    "tags": []
+  },
+  {
+    "pergunta": "OI",
+    "resposta": "Ola em que posso ajudar hj?",
+    "tags": []
+  },
+  {
+    "pergunta": "OQUE E INDEX.HTML",
+    "resposta": "O index.html serve principalmente para:\n1. Página Inicial: Funciona como a página padrão de um diretório web, eliminando a necessidade de digitar o nome do arquivo na barra de endereço.\n2. Estrutura do Site: Define o esqueleto do site, organizando onde ficam os textos, imagens, menus, botões e vídeos.\n3. Central de Links: Conecta e carrega outros arquivos essenciais do site, como folhas de estilo (CSS) e scripts de programação (JavaScript).\n4. Indexação de Busca: É o primeiro arquivo lido pelos robôs de busca (como o Google) para entender o tema e o conteúdo principal do seu site.\n\nCaracterísticas importantes:\n- HTML significa HyperText Markup Language (Linguagem de Marcação de Hipertexto).\n- Não é uma linguagem de programação, mas sim uma linguagem de marcação.\n- O nome deve ser escrito sempre em letras minúsculas para evitar erros de leitura na maioria dos servidores.\nSe você quiser criar o seu primeiro site, me avise se prefere um modelo de código básico ou se quer aprender a conectar o index.html com o sw.js que vimos antes.",
+    "tags": []
+  },
+  {
+    "pergunta": "OQUE E MANIFEST.JSON",
+    "resposta": "O manifest.json é um arquivo de configuração que transforma um site em um aplicativo móvel ou desktop (PWA). Ele fornece ao navegador informações essenciais sobre como o seu site deve se comportar quando for instalado no dispositivo do usuário.Abaixo está o resumo formatado para você copiar diretamente:\nO manifest.json serve principalmente para:\n1. Instalação do App: Permite que o usuário adicione o site à tela inicial do celular ou computador com um ícone de aplicativo.\n2. Identificação do App: Define o nome oficial do aplicativo, o nome curto (para a tela inicial) e a descrição do software.\n3. Customização Visual: Configura as cores da barra de status, a cor de fundo da tela de carregamento (splash screen) e a orientação da tela (retrato ou paisagem).\n4. Modo de Exibição: Define se o site vai abrir em uma janela própria sem a barra de endereços do navegador, parecendo um app nativo (Standalone).\n\nCaracterísticas importantes:\n- É escrito em formato JSON (JavaScript Object Notation), que usa chaves e valores.\n- Precisa ser vinculado ao arquivo index.html através de uma tag <link>.\n- É um dos três requisitos obrigatórios para criar uma PWA (junto com o HTTPS e o sw.js).\nSe você quiser configurar o seu aplicativo, posso gerar um modelo pronto de código do manifest.json ou te mostrar como interligar o index.html, o sw.js e o manifest.json no seu projeto. Qual você prefere?",
+    "tags": []
+  },
+  {
+    "pergunta": "OQUE E PASTA",
+    "resposta": "A pasta serve principalmente para:\n1. Organização Estruturada: Evita que todos os arquivos do sistema fiquem misturados em um único lugar, facilitando a localização de itens.\n2. Agrupamento de Projetos: Permite reunir todos os arquivos relacionados a um mesmo tema (como as imagens, códigos e textos de um site).\n3. Criação de Caminhos (Paths): Define o endereço digital onde um arquivo está guardado, permitindo que o sistema encontre e leia esse arquivo.\n4. Controle de Permissões: Facilita aplicar regras de segurança (como bloquear acesso ou ocultar) para vários arquivos de uma só vez.\n\nCaracterísticas importantes:\n- Uma pasta não possui tamanho próprio; o tamanho dela é a soma de todos os arquivos que estão dentro dela.\n- Uma pasta dentro de outra pasta é chamada de \"subpasta\" ou \"subdiretório\".\n- No desenvolvimento web, o nome das pastas deve ser escrito em letras minúsculas e sem espaços ou acentos.\nSe você estiver montando o seu site com os arquivos anteriores (index.html, sw.js, manifest.json), posso te mostrar como organizar esses arquivos dentro das pastas certas do seu projeto. Quer ver a estrutura de pastas recomendada?",
+    "tags": []
+  },
+  {
+    "pergunta": "OQUE E ARQUIVO",
+    "resposta": "O arquivo serve principalmente para:\n1. Armazenar Informações: Guarda textos, códigos, imagens, músicas, vídeos ou configurações de forma permanente no disco.\n2. Identificar Conteúdo: Usa uma extensão (como .html, .js, .txt, .png) para dizer ao sistema operacional qual programa deve abri-lo.\n3. Executar Instruções: Transmite ordens ao processador para rodar aplicativos, jogos e sistemas quando o arquivo é do tipo executável.\n4. Preservar Dados: Mantém as informações salvas mesmo depois que o computador ou o celular são desligados.\n\nCaracterísticas importantes:\n- Cada arquivo possui metadados invisíveis, como tamanho, data de criação e autor.\n- O nome de um arquivo é dividido em duas partes: o nome escolhido e a extensão (ex: index.html).\n- Arquivos diferentes podem ter o mesmo nome, desde que fiquem guardados em pastas diferentes.\nAgora que você já conhece arquivos e pastas, quer que eu te mostre como criar e salvar seu primeiro arquivo de código usando um editor de textos?",
+    "tags": []
+  },
+  {
+    "pergunta": "OQUE PWA",
+    "resposta": "PWA (Progressive Web App) é um site comum que possui recursos e tecnologias que o fazem funcionar exatamente como um aplicativo de celular ou computador. Ele une o melhor da web (acesso rápido por um link) com o melhor dos aplicativos nativos (funcionamento offline e notificações) [com.google.android.apps.docs:4].Abaixo está o resumo formatado para você copiar diretamente:O PWA serve principalmente para: 1. Instalação Direta: Permite que o usuário instale o site na tela inicial do celular ou desktop sem precisar baixar nada pelas lojas de apps (Google Play ou App Store). 2. Uso Sem Internet: Funciona normalmente em modo offline ou com conexões muito lentas, carregando as páginas de forma instantânea. 3. Notificações Push: Envia mensagens e alertas diretos para a tela do usuário para aumentar o engajamento, mesmo com o app fechado. 4. Economia de Espaço: Consome muito menos memória do dispositivo e menos dados de internet em comparação aos aplicativos tradicionais.  Três pilares obrigatórios para criar uma PWA: - HTTPS: O site precisa de uma conexão segura para proteger os dados. - Web Manifest (manifest.json): O arquivo de configuração com o ícone e nome do app. - Service Worker (sw.js): O script em segundo plano que gerencia o cache e o modo offline.Se você quiser transformar o seu site em um aplicativo, eu posso gerar um guia rápido de passos para juntar tudo o que vimos ou te mostrar um exemplo prato de código. Qual das opções você prefere seguir agora?",
+    "tags": []
+  },
+  {
+    "pergunta": "OQUE E ERRO DE SINTAXE",
+    "resposta": "Um erro de sintaxe ocorre quando você escreve um código violando as regras gramaticais da linguagem de programação. O computador não consegue entender a instrução porque ela foi digitada incorretamente, o que impede o programa de ser executado ou compilado.Abaixo está o resumo formatado para você copiar diretamente:O erro de sintaxe acontece principalmente por:\n1. Erros de Digitação: Escrever palavras-chave da linguagem de forma errada (ex: digitar \"funtion\" em vez de \"function\").\n2. Pontuação Ausente: Esquecer de fechar parênteses (), colchetes [], chaves {} ou omitir pontos e vírgulas (;) quando obrigatórios.\n3. Aspas Incompletas: Abrir uma string com aspas simples ou duplas e esquecer de fechá-la no final do texto.\n4. Uso Incorreto de Operadores: Colocar sinais matemáticos ou de atribuição em locais que a linguagem não permite.\n\nCaracterísticas importantes:\n- É o equivalente a um erro de gramática ou ortografia em um idioma humano.\n- O próprio editor de código (como o VS Code) costuma apontar o erro imediatamente com uma linha vermelha.\n- O programa trava antes mesmo de começar a rodar, pois o sistema não consegue traduzir o código.\nSe você estiver enfrentando um problema desses no seu projeto, cole o trecho do seu código aqui para eu encontrar o erro de sintaxe e te dar a correção exata.",
+    "tags": []
+  }
+]

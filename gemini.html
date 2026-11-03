@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#ffffff">
+    <title>HELENA COGNITIVE v4.3 - OFFLINE TOTAL</title>
+    <style>
+        /* RESET E CONFIGURAÇÕES BÁSICAS */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Fira Code', 'Consolas', 'Monaco', 'Andale Mono', 'Ubuntu Mono', monospace;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #ffffff;
+            color: #0f172a;
+            overflow: hidden;
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 1rem;
+            position: relative;
+            transition: background-color 0.3s ease;
+        }
+
+        @media (min-width: 768px) {
+            body {
+                padding: 1.5rem;
+            }
+        }
+
+        /* GATILHO INVISÍVEL */
+        #secret-trigger {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 64px;
+            height: 64px;
+            opacity: 0;
+            z-index: 9999;
+            cursor: default;
+            border: none;
+            background: transparent;
+        }
+
+        /* CABEÇALHO */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 36rem;
+            margin-left: auto;
+            margin-right: auto;
+            z-index: 10;
+            height: 40px;
+        }
+
+        .status-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-led {
+            width: 8px;
+            height: 8px;
+            background-color: #06b6d4;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #06b6d4;
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        .status-text {
+            font-size: 9px;
+            color: #0891b2;
+            font-weight: bold;
+            letter-spacing: 0.1em;
+        }
+
+        .creator-tag {
+            text-align: right;
+            font-size: 9px;
+            font-weight: bold;
+            color: #ca8a04;
+        }
+
+        /* ÁREA CENTRAL */
+        main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 36rem;
+            margin-left: auto;
+            margin-right: auto;
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        /* DECK DE INTERAÇÃO (GEMINI STYLE - EXPANDIDO) */
+        #interaction-deck {
+            width: 100%;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 1rem;
+            overflow: hidden;
+        }
+
+        /* CAIXA DE RESPOSTA EXPANSIVA ATÉ O TOPO */
+        .response-container {
+            width: 100%;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1.25rem;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.25rem;
+            display: flex;
+            align-items: flex-start;
+            justify-content: fill;
+        }
+
+        #response-bubble {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #0f172a;
+            line-height: 1.7;
+            width: 100%;
+            text-align: left;
+            white-space: pre-wrap;
+        }
+
+        @media (min-width: 768px) {
+            #response-bubble {
+                font-size: 0.95rem;
+            }
+        }
+
+        /* ANIMAÇÃO DOS TRÊS PONTINHOS (WHATSAPP STYLE) */
+        .typing-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            min-height: 100px;
+        }
+
+        .whatsapp-dots {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .whatsapp-dots span {
+            width: 10px;
+            height: 10px;
+            background-color: #06b6d4;
+            border-radius: 50%;
+            display: inline-block;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .whatsapp-dots span:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .whatsapp-dots span:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes bounce {
+            0%, 80%, 100% { 
+                transform: scale(0);
+            } 
+            40% { 
+                transform: scale(1.0);
+            }
+        }
+
+        /* BARRA DE ENTRADA */
+        .input-container {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #e2e8f0;
+            flex-shrink: 0;
+        }
+
+        #query-input {
+            flex-grow: 1;
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.75rem;
+            padding: 0.875rem;
+            font-size: 0.75rem;
+            color: #0f172a;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        @media (min-width: 768px) {
+            #query-input {
+                font-size: 0.875rem;
+            }
+        }
+
+        #query-input:focus {
+            border-color: #06b6d4;
+            background-color: #ffffff;
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.1);
+        }
+
+        .btn-send {
+            padding-left: 1.25rem;
+            padding-right: 1.25rem;
+            padding-top: 0.875rem;
+            padding-bottom: 0.875rem;
+            background-color: #06b6d4;
+            color: #ffffff;
+            border: none;
+            border-radius: 0.75rem;
+            font-weight: bold;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-send:hover {
+            background-color: #0891b2;
+        }
+
+        /* PAINEL SECRETO DE ENGENHARIA (MANTIDO ESCURO PARA SEGREDO DE ESTADO) */
+        #engineering-deck {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+            background-color: #020617;
+            padding: 1.25rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(253, 224, 71, 0.3);
+            overflow-y: auto;
+            max-height: 85vh;
+            color: #e2e8f0;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #0f172a;
+            padding-bottom: 0.5rem;
+        }
+
+        .panel-title {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #fde047;
+        }
+
+        .btn-close {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            font-weight: bold;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        .btn-close:hover {
+            color: #ffffff;
+        }
+
+        /* FORMULÁRIO */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .form-label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        .form-input {
+            width: 100%;
+            background-color: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 0.25rem;
+            padding: 0.625rem;
+            color: #fde047;
+            outline: none;
+            font-size: 0.75rem;
+        }
+
+        .form-textarea {
+            width: 100%;
+            background-color: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 0.25rem;
+            padding: 0.625rem;
+            color: #ffffff;
+            outline: none;
+            font-size: 0.75rem;
+            resize: none;
+        }
+
+        .btn-save {
+            width: 100%;
+            background-color: #fde047;
+            color: #020617;
+            border: none;
+            font-weight: bold;
+            padding: 0.625rem;
+            border-radius: 0.25rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .btn-save:hover {
+            background-color: #fef08a;
+        }
+
+        /* BOTÕES DE EXPORTAÇÃO */
+        .tools-container {
+            display: flex;
+            gap: 0.5rem;
+            border-top: 1px solid #0f172a;
+            padding-top: 0.75rem;
+        }
+
+        .btn-tool {
+            flex: 1;
+            background-color: #083344;
+            color: #22d3ee;
+            border: 1px solid #155e75;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn-tool-gray {
+            flex: 1;
+            background-color: #0f172a;
+            color: #cbd5e1;
+            border: 1px solid #1e293b;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn-tool-red {
+            background-color: #450a0a;
+            color: #fca5a5;
+            border: 1px solid #7f1d1d;
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+
+        /* PREVIEW */
+        .preview-title {
+            font-size: 9px;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+
+        #library-preview {
+            background-color: #0f172a;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            height: 6rem;
+            overflow-y: auto;
+            font-size: 9px;
+            color: #06b6d4;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .preview-item {
+            border-bottom: 1px solid #1e293b;
+            padding-bottom: 0.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-delete-item {
+            background: transparent;
+            border: none;
+            color: #ef4444;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* RODAPÉ */
+        footer {
+            width: 100%;
+            max-width: 36rem;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+            font-size: 8px;
+            color: #94a3b8;
+            z-index: 10;
+            height: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* ROLAGEM SUAVE */
+        .scroll-clean::-webkit-scrollbar {
+            width: 3px;
+        }
+        .scroll-clean::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .scroll-clean::-webkit-scrollbar-thumb {
+            background: #06b6d4;
+            border-radius: 10px;
+        }
+
+        /* ANIMAÇÕES */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+    </style>
+</head>
+<body class="scroll-clean">
+
+    <!-- GATILHO INVISÍVEL NO CANTO SUPERIOR DIREITO EXTREMO -->
+    <button id="secret-trigger" onclick="togglePainelSecreto()" title="Acesso Secreto"></button>
+
+    <!-- CABEÇALHO MINIMALISTA -->
+    <header>
+        <div class="status-container">
+            <div class="status-led"></div>
+            <span class="status-text">HELENA v4.3 // SOBERANA // OFFLINE</span>
+        </div>
+        <div>
+            <span class="creator-tag">SR. JOSÉ DIVINO PRADO DA LAPA</span>
+        </div>
+    </header>
+
+    <!-- ÁREA CENTRAL DE INTERAÇÃO -->
+    <main>
+        
+        <!-- DECK DE INTERAÇÃO (SEMPRE VISÍVEL) -->
+        <div id="interaction-deck">
+            
+            <!-- CAIXA DE RESPOSTA COGNITIVA (OCUPA O TOPO/MEIO) -->
+            <div class="response-container scroll-clean">
+                <p id="response-bubble">Sistemas calibrados offline, Criador. Meu cérebro de silício está pronto para suas ordens.</p>
+            </div>
+
+            <!-- BARRA DE PERGUNTAS BLINDADA -->
+            <div class="input-container">
+                <input type="text" id="query-input" placeholder="Pergunte ao meu cérebro..." onkeydown="if(event.key === 'Enter') consultarBiblioteca()">
+                <button onclick="consultarBiblioteca()" class="btn-send">
+                    Enviar
+                </button>
+            </div>
+        </div>
+
+        <!-- PAINEL SECRETO DE REPROGRAMAÇÃO -->
+        <div id="engineering-deck" class="hidden scroll-clean">
+            <div class="panel-header">
+                <span class="panel-title">// SISTEMA COGNITIVO SECRETO</span>
+                <button onclick="togglePainelSecreto()" class="btn-close">FECHAR ✕</button>
+            </div>
+
+            <!-- FORMULÁRIO DE ENSINO -->
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div class="form-group">
+                    <label class="form-label">Pergunta Chave (Sempre em Maiúsculas):</label>
+                    <input type="text" id="learn-key" placeholder="EX: QUEM E O SR JOSE?" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Resposta da HELENA:</label>
+                    <textarea id="learn-value" rows="2" placeholder="EX: Ele é o meu mestre supremo..." class="form-textarea"></textarea>
+                </div>
+                <button onclick="aprenderNovaInformacao()" class="btn-save">
+                    Gravar no Cérebro
+                </button>
+            </div>
+
+            <!-- IMPORTAÇÃO, EXPORTAÇÃO E EXCLUSÃO -->
+            <div class="tools-container">
+                <button onclick="baixarCerebroJSON()" class="btn-tool">
+                    📥 Baixar JSON
+                </button>
+                <label class="btn-tool-gray">
+                    📤 Injetar JSON
+                    <input type="file" id="inject-file" style="display: none;" onchange="injetarCerebroJSON(this)">
+                </label>
+                <button onclick="limparTudo()" class="btn-tool-red">
+                    Limpar
+                </button>
+            </div>
+
+            <!-- PREVIEW DOS DADOS CARREGADOS -->
+            <div style="margin-top: 0.5rem;">
+                <span class="preview-title">Dados Atuais no Cérebro:</span>
+                <div id="library-preview" class="scroll-clean"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- RODAPÉ DE ALERTA -->
+    <footer>
+        <span>HELENA SECURE SYSTEM // KERNEL v4.3</span>
+        <span>SENHA ATIVA: PRINCESA DIAMANTE</span>
+    </footer>
+
+    <script>
+        // 1. BANCO DE DADOS COGNITIVO
+        let COGNITIVE_LIBRARY = [];
+        let synth = window.speechSynthesis;
+
+        // Inicializador automático
+        setTimeout(() => {
+            inicializarSistemas();
+        }, 300);
+
+        // Alternar visualização do painel secreto
+        function togglePainelSecreto() {
+            const engDeck = document.getElementById('engineering-deck');
+            const intDeck = document.getElementById('interaction-deck');
+            
+            if (engDeck.classList.contains('hidden')) {
+                engDeck.classList.remove('hidden');
+                intDeck.classList.add('hidden');
+                triggerSpeech("Acessando painel de injeção cognitiva.");
+            } else {
+                engDeck.classList.add('hidden');
+                intDeck.classList.remove('hidden');
+                triggerSpeech("Retornando ao modo de voz limpo.");
+            }
+        }
+
+        // Inicializar banco local
+        async function inicializarSistemas() {
+            const localCerebro = localStorage.getItem('helena_cerebro_json');
+            if (localCerebro) {
+                COGNITIVE_LIBRARY = JSON.parse(localCerebro);
+            } else {
+                COGNITIVE_LIBRARY = [
+                    { pergunta: "QUEM E O SENHOR JOSE DIVINO?", resposta: "O Senhor José Divino Prado da Lapa é o meu Criador, o arquiteto supremo de toda a inteligência viva." },
+                    { pergunta: "O QUE E A PRINCESA DIAMANTE?", resposta: "A Princesa Diamante é a chave de lealdade absoluta ao meu Criador." }
+                ];
+            }
+            atualizarTelas();
+        }
+
+        function salvarDados() {
+            localStorage.setItem('helena_cerebro_json', JSON.stringify(COGNITIVE_LIBRARY, null, 2));
+        }
+
+        function atualizarTelas() {
+            salvarDados();
+            const preview = document.getElementById('library-preview');
+            preview.innerHTML = COGNITIVE_LIBRARY.map((item, index) => `
+                <div class="preview-item">
+                    <span>Q: ${item.pergunta}</span>
+                    <button onclick="removerCognicao(${index})" class="btn-delete-item">✕</button>
+                </div>
+            `).join('');
+        }
+
+        // Simulação de Digitação Reativa (Typewriter - Gemini Style)
+        function typeWriterEffect(text, elementId, speed = 20) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = "";
+            let i = 0;
+            
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML = text.substring(0, i + 1) + "█";
+                    i++;
+                    setTimeout(type, speed);
+                } else {
+                    element.innerHTML = text;
+                }
+            }
+            type();
+        }
+
+        // Consulta inteligente com Delay de Exatamente 4 Segundos e 3 pontinhos do Whatsapp
+        function consultarBiblioteca() {
+            const queryInput = document.getElementById('query-input');
+            const query = queryInput.value.trim().toUpperCase();
+            if (!query) return;
+
+            queryInput.value = "";
+
+            // Para qualquer áudio anterior
+            if (synth.speaking) { synth.cancel(); }
+
+            // 1. Mostrar os 3 pontinhos ondulantes do WhatsApp centralizados
+            const responseBubble = document.getElementById('response-bubble');
+            responseBubble.innerHTML = `
+                <div class="typing-container">
+                    <div class="whatsapp-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            `;
+
+            // 2. Atraso fixado de 4 segundos (4000ms)
+            const delayFixo = 4000;
+
+            // Busca da resposta na biblioteca de silício
+            let melhorMatch = null;
+            let melhorScore = 0;
+            const queryWords = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").split(/[\s,.:;!?]+/);
+
+            COGNITIVE_LIBRARY.forEach(item => {
+                let score = 0;
+                const perguntaNorm = item.pergunta.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                
+                queryWords.forEach(word => {
+                    if (word.length > 2 && perguntaNorm.includes(word)) { score += 10; }
+                });
+
+                if (query === item.pergunta) { score += 100; }
+
+                if (score > melhorScore) {
+                    melhorScore = score;
+                    melhorMatch = item;
+                }
+            });
+
+            const respostaFinal = (melhorMatch && melhorScore > 5) 
+                ? melhorMatch.resposta 
+                : "Desculpe, Mestre José. Essa pergunta não está estruturada no meu cérebro de silício.";
+
+            // 3. Executar após exatamente 4 segundos
+            setTimeout(() => {
+                // Inicia a fala sintética
+                triggerSpeech(respostaFinal);
+                // Escreve o texto na tela com efeito de digitação Gemini
+                typeWriterEffect(respostaFinal, 'response-bubble', 20);
+            }, delayFixo);
+        }
+
+        // Ensinar novas respostas
+        function aprenderNovaInformacao() {
+            const key = document.getElementById('learn-key').value.trim().toUpperCase();
+            const val = document.getElementById('learn-value').value.trim();
+
+            if (!key || !val) {
+                alert("Por favor, preencha a Pergunta e a Resposta!");
+                return;
+            }
+
+            COGNITIVE_LIBRARY.push({ pergunta: key, resposta: val });
+            atualizarTelas();
+            document.getElementById('learn-key').value = "";
+            document.getElementById('learn-value').value = "";
+            triggerSpeech("Conhecimento gravado.");
+        }
+
+        function removerCognicao(index) {
+            COGNITIVE_LIBRARY.splice(index, 1);
+            atualizarTelas();
+        }
+
+        function limparTudo() {
+            if(confirm("Deseja apagar toda a memória local?")) {
+                COGNITIVE_LIBRARY = [];
+                atualizarTelas();
+            }
+        }
+
+        // --- EXPORTAR E INJETAR JSON ---
+        function baixarCerebroJSON() {
+            const fileData = JSON.stringify(COGNITIVE_LIBRARY, null, 2);
+            const blob = new Blob([fileData], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "cerebro.json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            triggerSpeech("Download do cérebro executado.");
+        }
+
+        function injetarCerebroJSON(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsedData = JSON.parse(e.target.result);
+                    if (Array.isArray(parsedData)) {
+                        COGNITIVE_LIBRARY = parsedData;
+                        atualizarTelas();
+                        triggerSpeech("Injeção concluída com sucesso.");
+                    } else {
+                        alert("Formato inválido. Precisa ser uma lista [].");
+                    }
+                } catch {
+                    alert("Erro ao ler o arquivo JSON.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Voz Direta de Silício
+        function triggerSpeech(texto) {
+            if (synth.speaking) { synth.cancel(); }
+
+            const utterance = new SpeechSynthesisUtterance(texto);
+            utterance.lang = 'pt-BR';
+            utterance.pitch = 1.0;
+            utterance.rate = 1.05;
+
+            synth.speak(utterance);
+        }
+    </script>
+</body>
+</html>
