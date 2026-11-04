@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JDP Balcão de Vendas - PWA</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            color: #ffd700 !important;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        body {
+            background-color: #000000;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            border: 2px solid #ffd700;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #ffd700;
+            width: 100%;
+            padding-bottom: 15px;
+        }
+        h1 {
+            font-size: 1.4rem;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .card {
+            background-color: #0b0b0b;
+            border: 1px solid #ffd700;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #000000;
+            color: #ffd700 !important;
+            border: 1px solid #ffd700;
+            padding: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        button:hover {
+            background-color: #ffd700;
+            color: #000000 !important;
+            box-shadow: 0 0 15px #ffd700;
+        }
+        .visor-log {
+            margin-top: 10px;
+            border: 1px dashed #ffd700;
+            padding: 12px;
+            background: #050505;
+            min-height: 100px;
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>JDP BALCÃO DE VENDAS ⚡</h1>
+        <p style="font-size: 0.8rem; margin-top: 5px;">URL (Vitrine) -> Envia Comando -> APK (Cérebro Atualiza Estoque)</p>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h3>CATÁLOGO DE PRODUTOS</h3>
+            <p style="font-size: 0.8rem; margin: 8px 0 15px 0;">Clique para vender. O APK na borda processa e dá baixa no estoque:</p>
+            
+            <button onclick="enviarComandoVenda('foto_1.png')">VENDER PRODUTO 1 (FOTO 1)</button>
+            <button onclick="enviarComandoVenda('foto_2.png')">VENDER PRODUTO 2 (FOTO 2)</button>
+            <button onclick="enviarComandoVenda('foto_3.png')">VENDER PRODUTO 3 (FOTO 3)</button>
+            <button onclick="enviarComandoVenda('foto_4.png')">VENDER PRODUTO 4 (FOTO 4)</button>
+            <button onclick="enviarComandoVenda('foto_5.png')">VENDER PRODUTO 5 (FOTO 5)</button>
+        </div>
+
+        <div class="card">
+            <h3>RESPOSTA DO CÉREBRO (APK)</h3>
+            <div class="visor-log" id="visorLog">
+                [ AGUARDANDO COMANDO DE VENDA... ]
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function enviarComandoVenda(produto) {
+            const visor = document.getElementById('visorLog');
+            visor.innerHTML = `[ ENVIANDO ] Comando 'vender' para o cérebro (APK) referente a: ${produto}...`;
+
+            // Verifica se a ponte nativa do cérebro APK está presente
+            if (window.JDP_Cerebro) {
+                try {
+                    // O PWA envia apenas o comando. O APK processa e retorna o resultado da baixa de estoque.
+                    const respostaAPK = window.JDP_Cerebro.executarComando("vender", produto);
+                    visor.innerHTML = `[ RESPOSTA DO APK ]: <br><br><strong>${respostaAPK}</strong>`;
+                } catch (e) {
+                    visor.innerHTML = `[ ERRO NA EXECUÇÃO ]: ${e.message}`;
+                }
+            } else {
+                // Modo simulação web
+                setTimeout(() => {
+                    visor.innerHTML = `[ MODO SIMULAÇÃO WEB ]<br><br>Comando 'vender' simulado para <strong>${produto}</strong>. Estoque atualizado no cérebro.`;
+                }, 300);
+            }
+        }
+    </script>
+</body>
+</html>
